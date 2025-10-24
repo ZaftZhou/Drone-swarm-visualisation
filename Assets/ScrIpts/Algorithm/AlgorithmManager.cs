@@ -11,14 +11,9 @@ public class AlgorithmManager : MonoBehaviour
     [Tooltip("conside seach area")]
     [SerializeField] private Collider _searchArea;
 
+    private Dictionary<string, AlgorithmBase> _availableStrategies;
 
-    // --- 策略控制 ---
-
-    // 存储所有可用的策略实例
-    private Dictionary<string, AbstractSwarmAlgorithm> _availableStrategies;
-
-    // 当前正在运行的策略
-    [SerializeField] private AbstractSwarmAlgorithm _currentAlgorithm;
+    [SerializeField] private AlgorithmBase _currentAlgorithm;
     public string CurrentAlgorithmName => _currentAlgorithm?.AlgorithmName ?? "None";
 
 
@@ -44,7 +39,7 @@ public class AlgorithmManager : MonoBehaviour
     /// </summary>
     private void InitializeAvailableStrategies()
     {
-        _availableStrategies = new Dictionary<string, AbstractSwarmAlgorithm>();
+        _availableStrategies = new Dictionary<string, AlgorithmBase>();
 
         //to do
 
@@ -55,7 +50,7 @@ public class AlgorithmManager : MonoBehaviour
 
     }
 
-    private void AddAlgorithm(AbstractSwarmAlgorithm algorithm)
+    private void AddAlgorithm(AlgorithmBase algorithm)
     {
         if (algorithm == null || string.IsNullOrEmpty(algorithm.AlgorithmName))
         {
@@ -76,7 +71,7 @@ public class AlgorithmManager : MonoBehaviour
 
     public void SetAlgorithm(string algorithmName)
     {
-        if (_availableStrategies.TryGetValue(algorithmName, out AbstractSwarmAlgorithm newAlgorithm))
+        if (_availableStrategies.TryGetValue(algorithmName, out AlgorithmBase newAlgorithm))
         {
             if (_currentAlgorithm == newAlgorithm)
             {

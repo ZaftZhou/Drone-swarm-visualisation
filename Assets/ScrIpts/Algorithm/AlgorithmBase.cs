@@ -2,7 +2,7 @@
 using UnityEngine;
 
 
-public abstract class AbstractSwarmAlgorithm
+public abstract class AlgorithmBase:MonoBehaviour
 {
 
     protected List<GameObject> drones;

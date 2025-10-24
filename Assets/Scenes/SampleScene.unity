@@ -525,6 +525,7 @@ MonoBehaviour:
   allDrones: []
   _dronesCount: 0
   _searchArea: {fileID: 0}
+  _currentAlgorithm: {fileID: 0}
 --- !u!4 &1875565737
 Transform:
   m_ObjectHideFlags: 0

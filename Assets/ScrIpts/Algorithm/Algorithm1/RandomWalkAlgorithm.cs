@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class RandomWalkAlgorithm : AbstractSwarmAlgorithm
+public class RandomWalkAlgorithm : AlgorithmBase
 {
     public override string AlgorithmName => "Random Walk";
 
