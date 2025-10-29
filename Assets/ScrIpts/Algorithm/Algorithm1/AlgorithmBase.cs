@@ -1,11 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using NUnit.Framework;
+using System.Collections.Generic;
 using UnityEngine;
 
 
-public abstract class AlgorithmBase:MonoBehaviour
+public abstract class AlgorithmBase
 {
 
-    protected List<GameObject> drones;
+    protected List<Drone> drones;
     protected Bounds searchBounds;
 
     public abstract string AlgorithmName { get; }
@@ -13,7 +14,7 @@ public abstract class AlgorithmBase:MonoBehaviour
     /// <summary>
     /// Initializes the algorithm. Called by the manager when this algorithm is selected.
     /// </summary>
-    public virtual void Initialize(List<GameObject> drones, Collider searchArea)
+    public virtual void Initialize(List<Drone> drones, Collider searchArea)
     {
         this.drones = drones;
         this.searchBounds = searchArea.bounds;
@@ -40,5 +41,11 @@ public abstract class AlgorithmBase:MonoBehaviour
             Random.Range(searchBounds.min.z, searchBounds.max.z)
         );
     }
+
+    protected Vector3 SamplePosition(float t,int droneID)
+    {
+        return  drones[droneID].transform.position;
+    }
+     
     #endregion
 }

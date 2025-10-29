@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class AlgorithmManager : MonoBehaviour
 {
-    [SerializeField] private List<GameObject> allDrones = new List<GameObject>();
+    [SerializeField] private List<Drone> allDrones = new List<Drone>();
     [SerializeField] private int _dronesCount;
 
     [Tooltip("conside seach area")]
@@ -16,7 +16,10 @@ public class AlgorithmManager : MonoBehaviour
     [SerializeField] private AlgorithmBase _currentAlgorithm;
     public string CurrentAlgorithmName => _currentAlgorithm?.AlgorithmName ?? "None";
 
-
+    [Header("Coverage Map Settings")]
+    [Tooltip("The Render Texture used as the coverage map.")]
+    [SerializeField]
+    private RenderTexture coverageMapToClear;
     void Start()
     {
   
@@ -44,7 +47,7 @@ public class AlgorithmManager : MonoBehaviour
         //to do
 
         //AddAlgorithm(new RandomWalkAlgorithm());
-        //AddAlgorithm(new PartitionedGridAlgorithm());
+        AddAlgorithm(new PartitionedGridAlgorithm());
         //AddAlgorithm(new BoidsFlockingAlgorithm());
         //AddAlgorithm(new AntColonyAlgorithm());
 
@@ -75,19 +78,21 @@ public class AlgorithmManager : MonoBehaviour
         {
             if (_currentAlgorithm == newAlgorithm)
             {
-                Debug.Log($"currentAlgorithm: {algorithmName}");
+                // ...
                 return;
             }
 
             // clean old algorithm
             _currentAlgorithm?.OnAlgorithmEnd();
 
-     
+            // --- 2. 在初始化新算法之前，清空画布！ ---
+
             _currentAlgorithm = newAlgorithm;
-            //currentAlgorithm.Initialize(allDrones, searchArea); //
+            _currentAlgorithm.Initialize(allDrones, _searchArea);
 
             Debug.Log($" currentAlgorithm: {_currentAlgorithm.AlgorithmName}");
         }
+
         else
         {
             Debug.LogError($"Can't find '{algorithmName}' Algorithm！");
@@ -111,4 +116,9 @@ public class AlgorithmManager : MonoBehaviour
     {
         return new List<string>(_availableStrategies.Keys);
     }
+
+    /// <summary>
+    /// Manually clears the Coverage RenderTexture to black.
+    /// </summary>
+
 }
