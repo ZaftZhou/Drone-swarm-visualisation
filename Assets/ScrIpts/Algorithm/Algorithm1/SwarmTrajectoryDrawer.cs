@@ -1,47 +1,30 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-/// <summary>
-/// 高性能无人机群轨迹绘制系统 - GPU 加速版本
-/// High-Performance Swarm Trajectory Drawer - GPU Accelerated
-/// 
-/// 性能优化：
-/// 1. 使用 GL 直接绘制到 RenderTexture（GPU 操作）
-/// 2. 批处理所有绘制操作
-/// 3. 减少 CPU-GPU 数据传输
-/// 4. 可选的帧跳过机制
-/// </summary>
 public class SwarmTrajectoryDrawer : MonoBehaviour
 {
     [Header("Trajectory Texture")]
-    [Tooltip("轨迹绘制的 RenderTexture")]
     [SerializeField] private RenderTexture trajectoryTexture;
 
-    [Tooltip("纹理分辨率 (推荐: 1024-2048)")]
-    [SerializeField] private int textureResolution = 1024;  // 降低默认分辨率
+    [SerializeField] private int textureResolution = 1024;  
 
     [Header("Performance Settings")]
-    [Tooltip("绘制更新间隔（秒）- 增大可提升性能")]
-    [SerializeField] private float drawInterval = 0.1f;  // 增加默认间隔
+    [SerializeField] private float drawInterval = 0.1f; 
 
-    [Tooltip("每 N 帧绘制一次 (1=每帧, 2=隔帧)")]
     [SerializeField][Range(1, 5)] private int frameSkip = 2;
 
-    [Tooltip("无人机移动多少距离才绘制")]
-    [SerializeField] private float minMoveDistance = 2f;  // 增加阈值
 
-    [Tooltip("使用 GPU 加速绘制")]
+    [SerializeField] private float minMoveDistance = 2f;  
+
     [SerializeField] private bool useGPUAcceleration = true;
 
     [Header("Drawing Settings")]
-    [Tooltip("轨迹线宽度（像素）")]
-    [SerializeField] private float lineWidth = 2f;  // 减小默认宽度
+      [SerializeField] private float lineWidth = 2f;  
 
-    [Tooltip("线条平滑度 (0=最快, 2=最平滑)")]
+    [Tooltip("lineSmoothing (0=Fastest, 2=Most smooth)")]
     [SerializeField][Range(0, 2)] private int lineSmoothing = 0;
 
     [Header("Color Settings")]
-    [Tooltip("无人机轨迹颜色数组")]
     [SerializeField]
     private Color[] droneColors = new Color[]
     {
@@ -64,22 +47,21 @@ public class SwarmTrajectoryDrawer : MonoBehaviour
 
     [Header("Debug")]
     [SerializeField] private bool showDebugInfo = true;
-    [SerializeField] private bool showDebugGizmos = false;  // 默认关闭以提升性能
+    [SerializeField] private bool showDebugGizmos = false; 
 
-    // 私有变量
+   
     private Dictionary<Drone, DroneTrajectoryData> droneTrajectories;
     private Material lineMaterial;
     private float nextDrawTime;
     private int frameCounter;
     private bool isInitialized = false;
 
-    // 性能统计
+    [Header("Performance Statistics ")]
     private float totalDistance = 0f;
     private int totalDrawCalls = 0;
     private float lastFrameTime = 0f;
     private float avgFrameTime = 0f;
 
-    // 批处理缓冲
     private List<LineSegment> pendingLines = new List<LineSegment>();
 
     private struct LineSegment
@@ -114,28 +96,20 @@ public class SwarmTrajectoryDrawer : MonoBehaviour
 
     void InitializeSystem()
     {
-        Debug.Log("🚀 SwarmTrajectoryDrawer (GPU优化版): 开始初始化...");
+        Debug.Log("🚀 SwarmTrajectoryDrawer Initializing...");
 
-        // 自动查找搜索区域
         if (autoSyncSearchArea && searchAreaCollider == null)
         {
             FindSearchAreaCollider();
         }
 
-        // 同步世界映射参数
         if (searchAreaCollider != null)
         {
             SyncWorldMappingFromCollider();
         }
-
-        // 初始化纹理和材质
         InitializeRenderTexture();
         InitializeMaterial();
-
-        // 初始化轨迹数据
         droneTrajectories = new Dictionary<Drone, DroneTrajectoryData>();
-
-        // 延迟查找无人机
         Invoke(nameof(FindAndSetupDrones), 0.5f);
     }
 
@@ -163,7 +137,7 @@ public class SwarmTrajectoryDrawer : MonoBehaviour
                     col.gameObject.name.ToLower().Contains("area"))
                 {
                     searchAreaCollider = col;
-                    Debug.Log($"📍 找到搜索区域: {col.gameObject.name}");
+                    Debug.Log($"📍 Search area: {col.gameObject.name}");
                     break;
                 }
             }
@@ -181,7 +155,7 @@ public class SwarmTrajectoryDrawer : MonoBehaviour
         float maxDimension = Mathf.Max(bounds.size.x, bounds.size.z);
         worldSize = maxDimension * (1f + boundaryPadding);
 
-        Debug.Log($"📐 世界映射: 中心={worldCenter}, 大小={worldSize}m");
+        Debug.Log($"📐 World center={worldCenter}, World size={worldSize}m");
     }
 
     void FindAndSetupDrones()
@@ -190,11 +164,11 @@ public class SwarmTrajectoryDrawer : MonoBehaviour
 
         if (allDrones.Length == 0)
         {
-            Debug.LogWarning("⚠️ 场景中没有找到无人机！");
+            Debug.LogWarning("⚠️ There is no drone in the scene！");
             return;
         }
 
-        Debug.Log($"✅ 找到 {allDrones.Length} 架无人机");
+        Debug.Log($"✅ Find {allDrones.Length} Drones");
 
         for (int i = 0; i < allDrones.Length; i++)
         {
@@ -206,7 +180,7 @@ public class SwarmTrajectoryDrawer : MonoBehaviour
         }
 
         isInitialized = true;
-        Debug.Log($"✅ 系统初始化完成，追踪 {droneTrajectories.Count} 架无人机");
+        Debug.Log($"✅ Initialized，track {droneTrajectories.Count} Drones");
     }
 
     void InitializeRenderTexture()
@@ -220,7 +194,7 @@ public class SwarmTrajectoryDrawer : MonoBehaviour
                 RenderTextureFormat.ARGB32
             );
             trajectoryTexture.filterMode = FilterMode.Bilinear;
-            trajectoryTexture.antiAliasing = 1;  // 禁用抗锯齿以提升性能
+            trajectoryTexture.antiAliasing = 1;  
             trajectoryTexture.Create();
         }
 
@@ -230,7 +204,7 @@ public class SwarmTrajectoryDrawer : MonoBehaviour
         GL.Clear(true, true, Color.black);
         RenderTexture.active = rt;
 
-        Debug.Log($"✅ RenderTexture 已创建: {textureResolution}x{textureResolution}");
+        Debug.Log($"✅ RenderTexture generated: {textureResolution}x{textureResolution}");
     }
 
     void InitializeMaterial()
@@ -255,19 +229,11 @@ public class SwarmTrajectoryDrawer : MonoBehaviour
         if (!isInitialized) return;
 
         frameCounter++;
-
-        // 帧跳过机制
         if (frameCounter % frameSkip != 0) return;
-
-        // 时间间隔检查
         if (Time.time < nextDrawTime) return;
-
         float startTime = Time.realtimeSinceStartup;
-
-        // 收集需要绘制的线段
         CollectLineSegments();
 
-        // 批量绘制
         if (pendingLines.Count > 0)
         {
             if (useGPUAcceleration)
@@ -282,8 +248,6 @@ public class SwarmTrajectoryDrawer : MonoBehaviour
         }
 
         nextDrawTime = Time.time + drawInterval;
-
-        // 性能统计
         lastFrameTime = (Time.realtimeSinceStartup - startTime) * 1000f;
         avgFrameTime = Mathf.Lerp(avgFrameTime, lastFrameTime, 0.1f);
     }
@@ -302,7 +266,6 @@ public class SwarmTrajectoryDrawer : MonoBehaviour
 
             if (distance >= minMoveDistance)
             {
-                // 添加到批处理队列
                 pendingLines.Add(new LineSegment
                 {
                     start = data.lastPosition,
@@ -310,7 +273,6 @@ public class SwarmTrajectoryDrawer : MonoBehaviour
                     color = data.color
                 });
 
-                // 更新统计
                 data.lastPosition = currentPos;
                 data.distanceTraveled += distance;
                 data.pointCount++;
@@ -322,7 +284,6 @@ public class SwarmTrajectoryDrawer : MonoBehaviour
 
     void DrawLinesGPU()
     {
-        // 使用 GL 直接绘制到 RenderTexture（GPU 操作）
         RenderTexture.active = trajectoryTexture;
 
         GL.PushMatrix();
@@ -338,12 +299,8 @@ public class SwarmTrajectoryDrawer : MonoBehaviour
             Vector2 end = WorldToTextureCoordinates(line.end);
 
             GL.Color(line.color);
-
-            // 绘制主线
             GL.Vertex3(start.x, start.y, 0);
             GL.Vertex3(end.x, end.y, 0);
-
-            // 如果需要更粗的线，绘制额外的偏移线
             if (lineWidth > 1f)
             {
                 Vector2 dir = (end - start).normalized;
@@ -370,8 +327,7 @@ public class SwarmTrajectoryDrawer : MonoBehaviour
 
     void DrawLinesCPU()
     {
-        // 备用的 CPU 绘制方法（保留以防 GPU 方法不兼容）
-        Debug.LogWarning("使用 CPU 绘制模式，性能较低");
+        Debug.LogWarning("Using cpu drawing");
     }
 
     Vector2 WorldToTextureCoordinates(Vector3 worldPos)
@@ -386,7 +342,6 @@ public class SwarmTrajectoryDrawer : MonoBehaviour
         return new Vector2(x, y);
     }
 
-    // ==================== 公共方法 ====================
 
     public void ClearAllTrajectories()
     {
@@ -412,7 +367,7 @@ public class SwarmTrajectoryDrawer : MonoBehaviour
         totalDrawCalls = 0;
         pendingLines.Clear();
 
-        Debug.Log("🧹 已清空所有轨迹");
+        Debug.Log("🧹 clear all the path history");
     }
 
     public RenderTexture GetTrajectoryTexture() => trajectoryTexture;
@@ -448,7 +403,6 @@ public class SwarmTrajectoryDrawer : MonoBehaviour
         }
     }
 
-    // ==================== 性能统计 ====================
 
     public float GetAverageFrameTime()
     {
@@ -483,14 +437,11 @@ public class SwarmTrajectoryDrawer : MonoBehaviour
         GUILayout.BeginArea(new Rect(10, Screen.height - 180, 400, 170));
         GUI.Box(new Rect(0, 0, 400, 170), "");
 
-        GUILayout.Label("<b>SwarmTrajectoryDrawer (GPU优化版)</b>");
-        GUILayout.Label($"无人机数: {GetDroneCount()}");
-        GUILayout.Label($"总距离: {totalDistance:F1}m");
-        GUILayout.Label($"绘制调用: {totalDrawCalls}");
-        GUILayout.Label($"待绘制线段: {pendingLines.Count}");
-        GUILayout.Label($"帧时间: {avgFrameTime:F2}ms");
-        GUILayout.Label($"分辨率: {textureResolution}x{textureResolution}");
-        GUILayout.Label($"GPU加速: {(useGPUAcceleration ? "启用" : "禁用")}");
+        GUILayout.Label("<b>SwarmTrajectoryDrawer (GPU)</b>");
+        GUILayout.Label($"Drone count: {GetDroneCount()}");
+        GUILayout.Label($"Total distance: {totalDistance:F1}m");
+        GUILayout.Label($"Average frame time: {avgFrameTime:F2}ms");
+
 
         GUILayout.EndArea();
     }

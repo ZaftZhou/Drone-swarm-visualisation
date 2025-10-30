@@ -148,13 +148,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7115131205267298875}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0.97243303, z: -0.2331823, w: 0}
-  m_LocalPosition: {x: 0, y: 2.41, z: 3.14}
+  m_LocalRotation: {x: 0.23318228, y: 0.0000029355283, z: -0.0000006780028, w: 0.9724331}
+  m_LocalPosition: {x: 0, y: 2.41, z: -3.3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1569970519511040186}
-  m_LocalEulerAnglesHint: {x: 26.969, y: 180, z: 0}
+  m_LocalEulerAnglesHint: {x: 26.969, y: 0, z: 0}
 --- !u!20 &3244102639220758896
 Camera:
   m_ObjectHideFlags: 0
@@ -280,15 +280,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6cc87ca970a21d54aa15c32e558f7888, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 2.02949
+      value: -99.099
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6cc87ca970a21d54aa15c32e558f7888, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: -34.68
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6cc87ca970a21d54aa15c32e558f7888, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 2.02949
+      value: 99.496
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6cc87ca970a21d54aa15c32e558f7888, type: 3}
       propertyPath: m_LocalRotation.w
@@ -411,8 +411,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.016835185, y: 0.009342408, z: 0.0062979003}
-  m_Center: {x: -9.313226e-10, y: 0.00044390024, z: 0.0017928099}
+  m_Size: {x: 0.016835192, y: 0.0093424115, z: 0.006297904}
+  m_Center: {x: -9.313241e-10, y: 0.00044389992, z: 0.0017928103}
 --- !u!114 &8143051558701845308
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -425,13 +425,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c57826c065312e45b404feca77b75ed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Drone
-  maxSpeed: 15
+  maxSpeed: 20
+  acceleration: 5
   rotationSpeed: 8
   targetReachedThreshold: 1.5
-  sensorRadius: 10
+  minSpeedForRotation: 0.5
+  maxTiltAngle: 15
+  tiltSpeed: 3
+  verticalDamping: 0.8
+  altitudeControlStrength: 10
+  enableCollisionAvoidance: 1
+  avoidanceDistance: 5
+  avoidanceStrength: 3
+  avoidanceLayer:
+    serializedVersion: 2
+    m_Bits: 64
+  sensorRadius: 50
+  sensorType: 1
+  coneAngle: 60
   droneLayer:
     serializedVersion: 2
     m_Bits: 64
+  showSensorRange: 1
+  sensorColor: {r: 0, g: 1, b: 0, a: 0.3}
+  showScannedArea: 1
+  scannedColor: {r: 0, g: 0.5, b: 1, a: 0.15}
+  showDirectionArrow: 1
 --- !u!1001 &1403325134217900350
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -466,19 +485,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6cc87ca970a21d54aa15c32e558f7888, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.7071068
+      value: 0.000001437962
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6cc87ca970a21d54aa15c32e558f7888, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0.7071068
+      value: -0.000001437962
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6cc87ca970a21d54aa15c32e558f7888, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0
+      value: -0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6cc87ca970a21d54aa15c32e558f7888, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0
+      value: -0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6cc87ca970a21d54aa15c32e558f7888, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -490,7 +509,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6cc87ca970a21d54aa15c32e558f7888, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
+      value: -180
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: 6cc87ca970a21d54aa15c32e558f7888, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'

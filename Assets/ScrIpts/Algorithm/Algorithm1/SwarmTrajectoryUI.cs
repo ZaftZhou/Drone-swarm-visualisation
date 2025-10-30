@@ -8,54 +8,29 @@ using UnityEngine.UI;
 /// </summary>
 public class SwarmTrajectoryUI : MonoBehaviour
 {
-    [Header("引用 References")]
-    [Tooltip("轨迹绘制器（会自动查找）")]
+    [Header("References")]
     public SwarmTrajectoryDrawer trajectoryDrawer;
-
-    [Tooltip("搜索区域Collider（用于自动设置地图大小）")]
     public Collider searchAreaCollider;
 
-    [Header("UI设置 UI Settings")]
-    [Tooltip("地图大小（如果autoSyncMapSize为true则自动计算）")]
+    [Header("UI Settings")]
     public Vector2 mapSize = new Vector2(300, 300);
-
-    [Tooltip("自动同步地图大小到搜索区域")]
     public bool autoSyncMapSize = true;
-
-    [Tooltip("地图显示比例（用于缩放显示）")]
     [Range(0.1f, 2f)]
     public float mapDisplayScale = 1f;
-
-    [Tooltip("地图位置偏移")]
     public Vector2 mapPosition = new Vector2(20, 20);
-
-    [Tooltip("更新频率")]
     public float updateInterval = 0.2f;
 
-    [Header("文本设置 Text Settings")]
-    [Tooltip("使用TextMeshPro（推荐）")]
+    [Header("Text Settings")]
     public bool useTextMeshPro = true;
-
-    [Tooltip("字体大小")]
     public int fontSize = 14;
+    public string clearButtonText = " lear";
 
-    [Tooltip("清空按钮文本")]
-    public string clearButtonText = "清空轨迹 Clear";
-
-    [Header("颜色设置 Color Settings")]
-    [Tooltip("面板背景颜色")]
+    [Header("Color Settings")]
     public Color panelBackgroundColor = new Color(0, 0, 0, 0.8f);
-
-    [Tooltip("按钮颜色")]
     public Color buttonColor = new Color(0.8f, 0.2f, 0.2f, 0.8f);
-
-    [Tooltip("文本颜色")]
     public Color textColor = Color.white;
-
-    [Tooltip("边框颜色")]
     public Color borderColor = new Color(1, 1, 1, 0.5f);
 
-    // 私有变量
     private RawImage trajectoryMapImage;
     private TextMeshProUGUI statsTextTMP;
     private Text statsTextLegacy;
@@ -65,26 +40,23 @@ public class SwarmTrajectoryUI : MonoBehaviour
 
     void Start()
     {
-        // 自动查找轨迹绘制器
         if (trajectoryDrawer == null)
         {
             trajectoryDrawer = FindFirstObjectByType<SwarmTrajectoryDrawer>();
             if (trajectoryDrawer == null)
             {
-                Debug.LogError("❌ TrajectoryUI: 找不到 SwarmTrajectoryDrawer！");
+                Debug.LogError("❌ TrajectoryUI: cant find SwarmTrajectoryDrawer！");
                 enabled = false;
                 return;
             }
         }
 
-        // 自动查找搜索区域Collider
+
         if (searchAreaCollider == null && autoSyncMapSize)
         {
-            // 尝试从AlgorithmManager获取
             AlgorithmManager manager = FindFirstObjectByType<AlgorithmManager>();
             if (manager != null)
             {
-                // 使用反射获取私有字段（如果需要的话）
                 var field = manager.GetType().GetField("_searchArea",
                     System.Reflection.BindingFlags.NonPublic |
                     System.Reflection.BindingFlags.Instance);
@@ -94,7 +66,6 @@ public class SwarmTrajectoryUI : MonoBehaviour
                 }
             }
 
-            // 如果还是没找到，尝试查找场景中的BoxCollider
             if (searchAreaCollider == null)
             {
                 BoxCollider[] colliders = FindObjectsByType<BoxCollider>(FindObjectsSortMode.None);
@@ -110,18 +81,13 @@ public class SwarmTrajectoryUI : MonoBehaviour
             }
         }
 
-        // 同步地图大小
         SyncMapSizeWithSearchArea();
 
-        // 创建UI
         CreateUI();
 
-        Debug.Log("✅ TrajectoryUI 初始化完成");
+        Debug.Log("✅ TrajectoryUI Initialized");
     }
 
-    /// <summary>
-    /// 根据搜索区域自动调整地图大小
-    /// </summary>
     void SyncMapSizeWithSearchArea()
     {
         if (!autoSyncMapSize || searchAreaCollider == null)
@@ -129,19 +95,15 @@ public class SwarmTrajectoryUI : MonoBehaviour
 
         Bounds bounds = searchAreaCollider.bounds;
         float maxDimension = Mathf.Max(bounds.size.x, bounds.size.z);
-
-        // 计算合适的地图显示大小（保持正方形，添加缩放）
-        float baseSize = 300f; // 基础大小
+        float baseSize = 300f; 
         mapSize = new Vector2(baseSize, baseSize) * mapDisplayScale;
-
-        // 同步到轨迹绘制器
         if (trajectoryDrawer != null)
         {
             trajectoryDrawer.SetWorldCenter(bounds.center);
             trajectoryDrawer.SetWorldSize(maxDimension);
         }
 
-        Debug.Log($"📐 地图大小已同步: {mapSize}, 搜索区域: {bounds.size}, 最大维度: {maxDimension}");
+        Debug.Log($"📐 Map size has synced: {mapSize}, Search size: {bounds.size}, MaxDimension: {maxDimension}");
     }
 
     void CreateUI()
@@ -161,7 +123,6 @@ public class SwarmTrajectoryUI : MonoBehaviour
             canvasObj.AddComponent<GraphicRaycaster>();
         }
 
-        // 创建主面板
         uiPanel = new GameObject("TrajectoryPanel");
         uiPanel.transform.SetParent(canvas.transform, false);
 
@@ -174,14 +135,8 @@ public class SwarmTrajectoryUI : MonoBehaviour
 
         Image panelBg = uiPanel.AddComponent<Image>();
         panelBg.color = panelBackgroundColor;
-
-        // 创建轨迹地图
         CreateTrajectoryMap();
-
-        // 创建统计文本
         CreateStatsText();
-
-        // 创建清空按钮
         CreateClearButton();
     }
 
@@ -200,7 +155,6 @@ public class SwarmTrajectoryUI : MonoBehaviour
         trajectoryMapImage = mapObj.AddComponent<RawImage>();
         trajectoryMapImage.texture = trajectoryDrawer.GetTrajectoryTexture();
 
-        // 添加边框
         GameObject border = new GameObject("Border");
         border.transform.SetParent(mapObj.transform, false);
         RectTransform borderRect = border.AddComponent<RectTransform>();
@@ -227,26 +181,24 @@ public class SwarmTrajectoryUI : MonoBehaviour
 
         if (useTextMeshPro)
         {
-            // 使用 TextMeshPro
             statsTextTMP = textObj.AddComponent<TextMeshProUGUI>();
             statsTextTMP.fontSize = fontSize;
             statsTextTMP.color = textColor;
             statsTextTMP.alignment = TextAlignmentOptions.TopLeft;
             statsTextTMP.text = "Loading stats...";
 
-            Debug.Log("✅ 使用 TextMeshPro");
+            Debug.Log("✅ Use TextMeshPro");
         }
         else
         {
-            // 使用传统 Text
-            statsTextLegacy = textObj.AddComponent<Text>();
+             statsTextLegacy = textObj.AddComponent<Text>();
             statsTextLegacy.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
             statsTextLegacy.fontSize = fontSize;
             statsTextLegacy.color = textColor;
             statsTextLegacy.alignment = TextAnchor.UpperLeft;
             statsTextLegacy.text = "Loading stats...";
 
-            Debug.Log("ℹ️ 使用传统 Text");
+            Debug.Log("ℹ️ Use Text");
         }
     }
 
@@ -313,9 +265,9 @@ public class SwarmTrajectoryUI : MonoBehaviour
         int droneCount = trajectoryDrawer.GetDroneCount();
 
         string statsInfo =
-            $"无人机数 Drones: {droneCount}\n" +
-            $"总距离 Distance: {distance:F1} m\n" +
-            $"状态 Status: 追踪中 Tracking...";
+            $"Total Drones: {droneCount}\n" +
+            $"Total Distance: {distance:F1} m\n" +
+            $"Status: Tracking...";
 
         if (useTextMeshPro && statsTextTMP != null)
         {
@@ -332,25 +284,19 @@ public class SwarmTrajectoryUI : MonoBehaviour
         if (trajectoryDrawer != null)
         {
             trajectoryDrawer.ClearAllTrajectories();
-            Debug.Log("🧹 已清空轨迹");
+            Debug.Log("🧹 Clear");
         }
     }
 
-    /// <summary>
-    /// 手动重新同步地图大小
-    /// </summary>
+
     public void ResyncMapSize()
     {
         SyncMapSizeWithSearchArea();
-
-        // 更新UI面板大小
         if (uiPanel != null)
         {
             RectTransform panelRect = uiPanel.GetComponent<RectTransform>();
             panelRect.sizeDelta = new Vector2(mapSize.x + 20, mapSize.y + 150);
         }
-
-        // 更新地图大小
         if (trajectoryMapImage != null)
         {
             RectTransform mapRect = trajectoryMapImage.GetComponent<RectTransform>();
@@ -366,9 +312,6 @@ public class SwarmTrajectoryUI : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 设置搜索区域引用
-    /// </summary>
     public void SetSearchAreaCollider(Collider collider)
     {
         searchAreaCollider = collider;
