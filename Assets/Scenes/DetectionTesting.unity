@@ -1358,8 +1358,8 @@ MonoBehaviour:
     m_Bits: 1073741824
   DetectionTexture: {fileID: 8400000, guid: 24f1d19c3cba9d547b04929f381b3ffd, type: 2}
   DetectionThreshold: 1
-  DetectionRayCount: 1000
-  DetectionSimulationSteps: 1000
+  DetectionRayCount: 2000
+  DetectionSimulationSteps: 2000
   RecordedEventCount: 100
 --- !u!4 &543450652912243975
 Transform:

@@ -81,7 +81,6 @@ public class DetectionTester : MonoBehaviour
             data.RecordedEvents = new DetectionEvent[RecordedEventCount];
             _vertexDetectionData [i] = data;
         }
-        Debug.Log($"vertex count {vertices.Length}");
     }
 
     private void Start()
@@ -123,9 +122,9 @@ public class DetectionTester : MonoBehaviour
                 if (Physics.Raycast(new Ray(location, new Vector3(ease1, _detectionCircleRelativeHeight, ease2)),
                     out RaycastHit hit, MaxDetectionDistance, DetectionLayer) && hit.collider.TryGetComponent<DetectionPlane>(out _))
                 {
-                    for (int t = 0; t < 3; t++)
+                    for (int v = 0; v < 3; v++) //for each vertex of hit triangle
                     {
-                        var detectionVertex = _vertexDetectionData[triangles[hit.triangleIndex * 3 + t]];
+                        var detectionVertex = _vertexDetectionData[triangles[hit.triangleIndex * 3 + v]];
                         if (detectionVertex.EventCount < detectionVertex.RecordedEvents.Length)
                         {
                             detectionVertex.RecordedEvents[detectionVertex.EventCount].DetectionVector = (location - detectionVertex.Position);
@@ -135,7 +134,7 @@ public class DetectionTester : MonoBehaviour
                         detectionVertex.SummedDetectionVector += (location - detectionVertex.Position).normalized
                            * Mathf.Lerp(1f, 0.1f, (location - detectionVertex.Position).magnitude / MaxDetectionDistance);
                         detectionVertex.TimesSeen++;
-                        _vertexDetectionData[triangles[hit.triangleIndex * 3 + t]] = detectionVertex;
+                        _vertexDetectionData[triangles[hit.triangleIndex * 3 + v]] = detectionVertex;
                     }
                 }
             }
@@ -164,7 +163,11 @@ public class DetectionTester : MonoBehaviour
         {
             for (int i = d.EventCount - 1; i >= 0; i--)
             {
-                if (d.RecordedEvents[i].Time <= lastValidTime && i > mostValidEvents) mostValidEvents = i + 1;
+                if (d.RecordedEvents[i].Time <= lastValidTime && i > mostValidEvents)
+                {
+                    mostValidEvents = i + 1;
+                    break;
+                }
             }
             if (d.TimesSeen > mostSeen)
                 mostSeen = d.TimesSeen;
@@ -202,7 +205,7 @@ public class DetectionTester : MonoBehaviour
         {
             var data = _vertexDetectionData[i];
             Vector3 summedPartialDetectionVector = new ();
-            int validEvents = 0;
+            int validEvents = data.EventCount;
             for (int eventIndex = 0; eventIndex < data.EventCount; eventIndex++)
             {
                 var recordedEvent = data.RecordedEvents[eventIndex];
