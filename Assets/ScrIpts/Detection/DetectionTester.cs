@@ -3,7 +3,6 @@ using UnityEngine;
 using System.IO;
 using System;
 using Random = UnityEngine.Random;
-using UnityEngine.SceneManagement;
 
 public class DetectionTester : MonoBehaviour
 {
@@ -11,6 +10,7 @@ public class DetectionTester : MonoBehaviour
     {
         public Vector3 DetectionVector;
         public float Time;
+        public int DroneIndex;
     }
 
     public struct VertexDetectionData
@@ -50,11 +50,13 @@ public class DetectionTester : MonoBehaviour
     public float MaxDetectionDistance = 500;
     public LayerMask DetectionLayer;
     public RenderTexture DetectionTexture;
+    public int DroneCount = 10;
     public int DetectionThreshold = 1;
     public int DetectionRayCount = 500;
     public int DetectionSimulationSteps = 1000;
-    [Header ("Increases memory use A LOT, adjust carefully")]
+    [Header("Increases memory use A LOT, adjust carefully")]
     public int RecordedEventCount = 10;
+    public IDronePathSampler DronePathSampler;
     private VertexDetectionData[] _vertexDetectionData;
     private float _detectionCircleRelativeHeight;
 
@@ -79,12 +81,13 @@ public class DetectionTester : MonoBehaviour
         {
             var data = _vertexDetectionData[i];
             data.RecordedEvents = new DetectionEvent[RecordedEventCount];
-            _vertexDetectionData [i] = data;
+            _vertexDetectionData[i] = data;
         }
     }
 
     private void Start()
     {
+        DronePathSampler.InitializePaths(DroneCount, new Vector3(0, Terrain.SampleHeight(Vector3.zero), 0));
         StartDetectionTest();
     }
 
@@ -149,7 +152,6 @@ public class DetectionTester : MonoBehaviour
     {
         float lastValidTime = 0.5f;
         int side = (int)Mathf.Sqrt(_vertexDetectionData.Length);
-        Debug.Log($"Side length: {side}");
         var bake = new Texture2D(side, side);
         var pixels = new Color32[side * side];
         int mostSeen = 0;
@@ -190,7 +192,7 @@ public class DetectionTester : MonoBehaviour
                 var dimmingFactor = ((e.TimesSeen / (float)mostSeen) + (e.SummedDetectionVector.magnitude / largestMagnitude)) / 2;
                 color = new Color(n.x, n.y, n.z) * new Color(dimmingFactor, dimmingFactor, dimmingFactor);
             }
-            pixels[(int)Mathf.Clamp(e.Position.x, 0, 999) + ((int)Mathf.Clamp(e.Position.z, 0, 999)) * side] = color;
+            pixels[(int)Mathf.Clamp(e.Position.x, 0, side - 1) + ((int)Mathf.Clamp(e.Position.z, 0, side - 1)) * side] = color;
         }
         bake.SetPixels32(pixels);
         bake.Apply();
@@ -200,16 +202,16 @@ public class DetectionTester : MonoBehaviour
         File.WriteAllBytes(path, png);
         yield return null;
 
-        
+
         for (int i = 0; i < _vertexDetectionData.Length; i++)
         {
             var data = _vertexDetectionData[i];
-            Vector3 summedPartialDetectionVector = new ();
+            Vector3 summedPartialDetectionVector = new();
             int validEvents = data.EventCount;
             for (int eventIndex = 0; eventIndex < data.EventCount; eventIndex++)
             {
                 var recordedEvent = data.RecordedEvents[eventIndex];
-                if (recordedEvent.Time > lastValidTime) 
+                if (recordedEvent.Time > lastValidTime)
                 {
                     validEvents = eventIndex;
                     break;
@@ -223,15 +225,15 @@ public class DetectionTester : MonoBehaviour
                 var dimmingFactor = ((validEvents / (float)mostValidEvents) + (data.SummedDetectionVector.magnitude / largestMagnitude)) / 2;
                 color = new Color(n.x, n.y, n.z) * new Color(dimmingFactor, dimmingFactor, dimmingFactor);
             }
-            pixels[(int)Mathf.Clamp(data.Position.x, 0, 999) + ((int)Mathf.Clamp(data.Position.z, 0, 999)) * side] = color;
+            pixels[(int)Mathf.Clamp(data.Position.x, 0, side - 1) + ((int)Mathf.Clamp(data.Position.z, 0, side - 1)) * side] = color;
         }
         bake.SetPixels32(pixels);
         bake.Apply();
         png = bake.EncodeToPNG();
-        path = Path.Combine(Application.persistentDataPath, $"DetectionStoppedAt05{DateTime.Now.ToFileTime()}.png");
+        path = Path.Combine(Application.persistentDataPath, $"PartialDetection{DateTime.Now.ToFileTime()}.png");
         Debug.Log($"baking data to {path}");
         File.WriteAllBytes(path, png);
-        Destroy( bake );
+        Destroy(bake);
     }
 
     private static float SmoothedRandom01()
