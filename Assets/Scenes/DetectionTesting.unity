@@ -3785,7 +3785,7 @@ MonoBehaviour:
   priority: 0
   blendDistance: 0
   weight: 1
-  sharedProfile: {fileID: 11400000, guid: 10fc4df2da32a41aaa32d77bc913491c, type: 2}
+  sharedProfile: {fileID: 11400000, guid: 33053d4c665777a4c83d2692e18698d7, type: 2}
 --- !u!4 &832575519
 Transform:
   m_ObjectHideFlags: 0
@@ -7922,7 +7922,7 @@ MonoBehaviour:
   MaxDetectionDistance: 1000
   DetectionLayer:
     serializedVersion: 2
-    m_Bits: 1073741824
+    m_Bits: 0
   DroneCount: 10
   DroneColors:
   - {r: 0, g: 0, b: 0, a: 0}
