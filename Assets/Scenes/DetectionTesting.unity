@@ -142,7 +142,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &98336646
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -253,7 +253,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &281761110
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -628,7 +628,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &563615226
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -739,7 +739,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &567778418
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -903,6 +903,59 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: -8894882430050873737, guid: 7bbf7c6e3e5a0104fa7aedc9451b06a3, type: 3}
+--- !u!1 &1043209658
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1043209660}
+  - component: {fileID: 1043209659}
+  m_Layer: 0
+  m_Name: PartitionGridPathGenerator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1043209659
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1043209658}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 990314ac85144f846a2b1836a95d28ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PartitionGridPathGenerator
+  scanDensityMultiplier: 1
+  scanRadius: 10
+  scanOverlap: 0.2
+  flightHeight: 20
+  _searchBounds:
+    m_Center: {x: 500, y: 0, z: 500}
+    m_Extent: {x: 500, y: 200, z: 500}
+  _addEdgeScans: 0
+  _terrain: {fileID: 40267847}
+--- !u!4 &1043209660
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1043209658}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1405657413
 GameObject:
   m_ObjectHideFlags: 0
@@ -921,7 +974,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &1405657414
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1032,7 +1085,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &1475511896
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1212,7 +1265,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &1934693840
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1356,11 +1409,12 @@ MonoBehaviour:
   DetectionLayer:
     serializedVersion: 2
     m_Bits: 1073741824
-  DetectionTexture: {fileID: 8400000, guid: 24f1d19c3cba9d547b04929f381b3ffd, type: 2}
+  DroneCount: 10
   DetectionThreshold: 1
   DetectionRayCount: 2000
   DetectionSimulationSteps: 2000
   RecordedEventCount: 100
+  DronePathSampler: {fileID: 1043209658}
 --- !u!4 &543450652912243975
 Transform:
   m_ObjectHideFlags: 0
@@ -1481,3 +1535,4 @@ SceneRoots:
   - {fileID: 1934693843}
   - {fileID: 563615229}
   - {fileID: 1475511899}
+  - {fileID: 1043209660}

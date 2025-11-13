@@ -4,7 +4,7 @@ using UnityEngine;
 public interface IDronePathSampler
 {
     public void InitializePaths(int droneCount, Vector3 droneStartingLocation);
-    public Vector3 SamplePosition(float t, int droneIndex);
+    public Vector3 SamplePositionAt(float t, int droneIndex);
 }
 
 public class PartitionGridPathGenerator : MonoBehaviour, IDronePathSampler
@@ -188,7 +188,7 @@ public class PartitionGridPathGenerator : MonoBehaviour, IDronePathSampler
     }
 
 
-    public Vector3 SamplePosition(float t, int droneIndex)
+    public Vector3 SamplePositionAt(float t, int droneIndex)
     {
         t = Mathf.Clamp01(t);
 
@@ -224,10 +224,10 @@ public class PartitionGridPathGenerator : MonoBehaviour, IDronePathSampler
                 {
                     segmentT = (targetDistance - segmentStartDist) / segmentLength;
                 }
-
-                return Vector3.Lerp(startPoint, endPoint, segmentT);
+                var position = Vector3.Lerp(startPoint, endPoint, segmentT);
+                return new Vector3(position.x, _terrain.SampleHeight(position) + flightHeight, position.z);
             }
         }
-        return path[path.Count - 1]; // is this a failsafe?
+        return path[path.Count - 1]; 
     }
 }

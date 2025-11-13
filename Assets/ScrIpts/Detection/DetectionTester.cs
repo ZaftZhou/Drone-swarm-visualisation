@@ -49,14 +49,14 @@ public class DetectionTester : MonoBehaviour
     public MeshFilter DetectionMeshFilter;
     public float MaxDetectionDistance = 500;
     public LayerMask DetectionLayer;
-    public RenderTexture DetectionTexture;
     public int DroneCount = 10;
     public int DetectionThreshold = 1;
     public int DetectionRayCount = 500;
     public int DetectionSimulationSteps = 1000;
     [Header("Increases memory use A LOT, adjust carefully")]
     public int RecordedEventCount = 10;
-    public IDronePathSampler DronePathSampler;
+    public GameObject DronePathSampler;
+    private IDronePathSampler _dronePathSampler;
     private VertexDetectionData[] _vertexDetectionData;
     private float _detectionCircleRelativeHeight;
 
@@ -83,24 +83,25 @@ public class DetectionTester : MonoBehaviour
             data.RecordedEvents = new DetectionEvent[RecordedEventCount];
             _vertexDetectionData[i] = data;
         }
+        if (!DronePathSampler.TryGetComponent(out _dronePathSampler))
+        {
+            throw new MissingComponentException($"No drone path sampler found in {DronePathSampler.name}!");
+        }
+
     }
 
     private void Start()
     {
-        DronePathSampler.InitializePaths(DroneCount, new Vector3(0, Terrain.SampleHeight(Vector3.zero), 0));
+        _dronePathSampler.InitializePaths(DroneCount, new Vector3(0, Terrain.SampleHeight(Vector3.zero), 0));
         StartDetectionTest();
     }
 
     public void StartDetectionTest()
     {
-        StartCoroutine(DetectingCoroutine(DetectionSimulationSteps,
-            new SimplePathSampler
-            {
-                PathPositions = new Vector3[] { new(500, 350, 0), new(1000, 350, 500), new(500, 350, 1000), new(0, 350, 0) }
-            }));
+        StartCoroutine(DetectingCoroutine(DetectionSimulationSteps, _dronePathSampler));
     }
 
-    private IEnumerator DetectingCoroutine(int steps, SimplePathSampler pathSampler)
+    private IEnumerator DetectingCoroutine(int steps, IDronePathSampler pathSampler)
     {
         var vertices = DetectionMeshFilter.mesh.vertices;
         var triangles = DetectionMeshFilter.mesh.triangles;
@@ -113,34 +114,39 @@ public class DetectionTester : MonoBehaviour
         }
         Debug.Log("finished setting positions");
         yield return null;
-
+        
         for (int step = 0; step < steps; step++)
         {
             float progress = step / (float)steps;
-            Vector3 location = pathSampler.SampleAt(progress);
-            for (int i = 0; i < DetectionRayCount; i++)
+            for (int droneIndex = 0; droneIndex < DroneCount; droneIndex++)
             {
-                var ease1 = SmoothedRandom01() * (Random.value < 0.5f ? -0.5f : 0.5f);
-                var ease2 = SmoothedRandom01() * (Random.value < 0.5f ? -0.5f : 0.5f);
-                if (Physics.Raycast(new Ray(location, new Vector3(ease1, _detectionCircleRelativeHeight, ease2)),
-                    out RaycastHit hit, MaxDetectionDistance, DetectionLayer) && hit.collider.TryGetComponent<DetectionPlane>(out _))
+                Vector3 location = pathSampler.SamplePositionAt(progress, droneIndex);
+                for (int i = 0; i < DetectionRayCount; i++)
                 {
-                    for (int v = 0; v < 3; v++) //for each vertex of hit triangle
+                    var ease1 = SmoothedRandom01() * (Random.value < 0.5f ? -0.5f : 0.5f);
+                    var ease2 = SmoothedRandom01() * (Random.value < 0.5f ? -0.5f : 0.5f);
+                    if (Physics.Raycast(new Ray(location, new Vector3(ease1, _detectionCircleRelativeHeight, ease2)),
+                        out RaycastHit hit, MaxDetectionDistance, DetectionLayer) && hit.collider.TryGetComponent<DetectionPlane>(out _))
                     {
-                        var detectionVertex = _vertexDetectionData[triangles[hit.triangleIndex * 3 + v]];
-                        if (detectionVertex.EventCount < detectionVertex.RecordedEvents.Length)
+                        for (int vertexIndex = 0; vertexIndex < 3; vertexIndex++)
                         {
-                            detectionVertex.RecordedEvents[detectionVertex.EventCount].DetectionVector = (location - detectionVertex.Position);
-                            detectionVertex.RecordedEvents[detectionVertex.EventCount].Time = progress;
-                            detectionVertex.EventCount++;
+                            var detectionVertex = _vertexDetectionData[triangles[hit.triangleIndex * 3 + vertexIndex]];
+                            if (detectionVertex.EventCount < detectionVertex.RecordedEvents.Length)
+                            {
+                                detectionVertex.RecordedEvents[detectionVertex.EventCount].DetectionVector = (location - detectionVertex.Position);
+                                detectionVertex.RecordedEvents[detectionVertex.EventCount].Time = progress;
+                                detectionVertex.RecordedEvents[detectionVertex.EventCount].DroneIndex = droneIndex;
+                                detectionVertex.EventCount++;
+                            }
+                            detectionVertex.SummedDetectionVector += (location - detectionVertex.Position).normalized
+                               * Mathf.Lerp(1f, 0.1f, (location - detectionVertex.Position).magnitude / MaxDetectionDistance);
+                            detectionVertex.TimesSeen++;
+                            _vertexDetectionData[triangles[hit.triangleIndex * 3 + vertexIndex]] = detectionVertex;
                         }
-                        detectionVertex.SummedDetectionVector += (location - detectionVertex.Position).normalized
-                           * Mathf.Lerp(1f, 0.1f, (location - detectionVertex.Position).magnitude / MaxDetectionDistance);
-                        detectionVertex.TimesSeen++;
-                        _vertexDetectionData[triangles[hit.triangleIndex * 3 + v]] = detectionVertex;
                     }
                 }
             }
+            
         }
         Debug.Log("finished detecting");
         yield return null;
