@@ -1733,7 +1733,7 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.3
+  near clip plane: 0.1
   far clip plane: 2500
   field of view: 60
   orthographic: 0
@@ -1762,7 +1762,7 @@ Transform:
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 196.7, z: -1596.8}
+  m_LocalPosition: {x: 0, y: 118.7, z: -1285.6}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -6538,6 +6538,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1688520422}
+  - component: {fileID: 1688520423}
   m_Layer: 0
   m_Name: CameraPivot
   m_TagString: Untagged
@@ -6561,6 +6562,18 @@ Transform:
   - {fileID: 330585546}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 20, y: 188.8, z: 0}
+--- !u!114 &1688520423
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1688520421}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7131186a128fa3b43891518507eacdd4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Detection.CameraController
 --- !u!1 &1689124592
 GameObject:
   m_ObjectHideFlags: 0
