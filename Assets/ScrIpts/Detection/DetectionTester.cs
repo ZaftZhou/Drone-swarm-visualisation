@@ -53,6 +53,7 @@ public class DetectionTester : MonoBehaviour
     public int DetectionThreshold = 1;
     public int DetectionRayCount = 500;
     public int DetectionSimulationSteps = 1000;
+    public Material DetectionVisMaterial;
     [Header("Increases memory use A LOT, adjust carefully")]
     public int RecordedEventCount = 10;
     public GameObject DronePathSampler;
@@ -202,6 +203,9 @@ public class DetectionTester : MonoBehaviour
         }
         bake.SetPixels32(pixels);
         bake.Apply();
+        var mat = DetectionMeshFilter.GetComponent<MeshRenderer>().material;
+        mat.SetTexture("_BaseMap", bake);
+        mat.SetTexture("_EmissionMap", bake);
         var png = bake.EncodeToPNG();
         var path = Path.Combine(Application.persistentDataPath, $"DetectionAll{DateTime.Now.ToFileTime()}.png");
         Debug.Log($"baking data to {path}");
@@ -209,37 +213,38 @@ public class DetectionTester : MonoBehaviour
         yield return null;
 
 
-        for (int i = 0; i < _vertexDetectionData.Length; i++)
-        {
-            var data = _vertexDetectionData[i];
-            Vector3 summedPartialDetectionVector = new();
-            int validEvents = data.EventCount;
-            for (int eventIndex = 0; eventIndex < data.EventCount; eventIndex++)
-            {
-                var recordedEvent = data.RecordedEvents[eventIndex];
-                if (recordedEvent.Time > lastValidTime)
-                {
-                    validEvents = eventIndex;
-                    break;
-                }
-                summedPartialDetectionVector += data.RecordedEvents[eventIndex].DetectionVector;
-            }
-            var n = summedPartialDetectionVector.normalized;
-            Color color = Color.red;
-            if (validEvents >= DetectionThreshold)
-            {
-                var dimmingFactor = ((validEvents / (float)mostValidEvents) + (data.SummedDetectionVector.magnitude / largestMagnitude)) / 2;
-                color = new Color(n.x, n.y, n.z) * new Color(dimmingFactor, dimmingFactor, dimmingFactor);
-            }
-            pixels[(int)Mathf.Clamp(data.Position.x, 0, side - 1) + ((int)Mathf.Clamp(data.Position.z, 0, side - 1)) * side] = color;
-        }
-        bake.SetPixels32(pixels);
-        bake.Apply();
-        png = bake.EncodeToPNG();
-        path = Path.Combine(Application.persistentDataPath, $"PartialDetection{DateTime.Now.ToFileTime()}.png");
-        Debug.Log($"baking data to {path}");
-        File.WriteAllBytes(path, png);
-        Destroy(bake);
+        //for (int i = 0; i < _vertexDetectionData.Length; i++)
+        //{
+        //    var data = _vertexDetectionData[i];
+        //    Vector3 summedPartialDetectionVector = new();
+        //    int validEvents = data.EventCount;
+        //    for (int eventIndex = 0; eventIndex < data.EventCount; eventIndex++)
+        //    {
+        //        var recordedEvent = data.RecordedEvents[eventIndex];
+        //        if (recordedEvent.Time > lastValidTime)
+        //        {
+        //            validEvents = eventIndex;
+        //            break;
+        //        }
+        //        summedPartialDetectionVector += data.RecordedEvents[eventIndex].DetectionVector;
+        //    }
+        //    var n = summedPartialDetectionVector.normalized;
+        //    Color color = Color.red;
+        //    if (validEvents >= DetectionThreshold)
+        //    {
+        //        var dimmingFactor = ((validEvents / (float)mostValidEvents) + (data.SummedDetectionVector.magnitude / largestMagnitude)) / 2;
+        //        color = new Color(n.x, n.y, n.z) * new Color(dimmingFactor, dimmingFactor, dimmingFactor);
+        //    }
+        //    pixels[(int)Mathf.Clamp(data.Position.x, 0, side - 1) + ((int)Mathf.Clamp(data.Position.z, 0, side - 1)) * side] = color;
+        //}
+        //bake.SetPixels32(pixels);
+        //bake.Apply();
+        //png = bake.EncodeToPNG();
+        //path = Path.Combine(Application.persistentDataPath, $"PartialDetection{DateTime.Now.ToFileTime()}.png");
+        //Debug.Log($"baking data to {path}");
+        //File.WriteAllBytes(path, png);
+        //Destroy(bake);
+
     }
 
     private static float SmoothedRandom01()
