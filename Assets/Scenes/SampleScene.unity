@@ -803,7 +803,7 @@ MonoBehaviour:
   searchAreaCollider: {fileID: 509835305}
   autoFindSearchArea: 1
   availableAlgorithms:
-  - {fileID: 1763691832}
+  - {fileID: 0}
   currentAlgorithmIndex: 0
   autoInitializeOnStart: 1
   showDebugInfo: 1
