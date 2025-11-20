@@ -127,4 +127,14 @@ public class ParticleSwarmAlgorithm : MonoBehaviour
     // and a way to get a fitness score. I was planning on using the distance
     // to nearest obstacle and distance to furthest unsearched node to get it
     // !!! DON'T IGNORE !!!
+
+    // For the fitness score, I need to get a list of all the obstacles
+    // and/or their positions in the scene, also need the position of each node in the grid
+    // and drone.
+    // Then using those positions I just get the distances to them and make the drones
+    // move towards the furthest unsearched node and avoid all the obstacles and other drones
+    // -----ALTERNATIVE-----
+    // I use the colliders to prevent collisions and simulate the ideal
+    // collision avoidance, but this most likely can't be translated
+    // to real life methods. Can't have invisible colliders IRL
 }
