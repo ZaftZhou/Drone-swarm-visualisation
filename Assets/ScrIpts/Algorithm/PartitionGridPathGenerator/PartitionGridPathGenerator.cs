@@ -30,6 +30,7 @@ public class PartitionGridPathGenerator : MonoBehaviour, IDronePathSampler
     private List<float>[] _cumulativePathLengthLists;
     private float[] _totalPathLengths;
     private int _droneCount;
+
     private Vector3 _droneStartingLocation;
 
 
@@ -41,6 +42,7 @@ public class PartitionGridPathGenerator : MonoBehaviour, IDronePathSampler
         _dronePaths = new List<Vector3>[_droneCount];
         _cumulativePathLengthLists = new List<float>[_droneCount];
         _totalPathLengths = new float[_droneCount];
+        _droneStartingLocation = droneStartingLocation;
 
         CalculatePartitions();
         GenerateDronePaths();
