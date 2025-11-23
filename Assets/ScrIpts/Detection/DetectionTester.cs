@@ -20,10 +20,11 @@ public class DetectionTester : MonoBehaviour
         Drone,
         Probability,
         Undetected,
-        Time
+        Time,
+        Overlap
     }
 
-    public struct DetectionEvent
+    public struct TerrainDetectionEvent
     {
         public Vector3 DetectionVector;
         public float Time;
@@ -32,11 +33,18 @@ public class DetectionTester : MonoBehaviour
 
     public struct VertexDetectionData
     {
-        public DetectionEvent[] RecordedEvents;
+        public TerrainDetectionEvent[] Events;
         public Vector3 Position;
         public Vector3 SummedDetectionVector;
         public int EventCount;
         public int TimesSeen;
+    }
+
+    public struct TargetDetectionEvent
+    {
+        public float Distance;
+        public float Time;
+        public int DroneIndex;
     }
 
     public struct SimplePathSampler
@@ -77,6 +85,11 @@ public class DetectionTester : MonoBehaviour
     public GameObject VisPlane;
     public DroneVisualiser DroneVisualiser;
     public CameraController CameraController;
+    public Vector3 DroneStart;
+    public RectTransform FindTimeIndicator;
+    public float FTIndicatorMinX;
+
+
     private IDronePathSampler _dronePathSampler;
     private VertexDetectionData[] _vertexDetectionData;
     private float _detectionCircleRelativeHeight;
@@ -86,10 +99,13 @@ public class DetectionTester : MonoBehaviour
     private int[] _detectionTris;
     private int _sideLength;
     private int _layerAmount;
-    [SerializeField]
-    private Vector3 _droneStart;
     private bool _doneDetecting = false;
     private Material _visMaterial;
+    private string _simulationId;
+    private float _targetFoundTime;
+    private int _targetFindingDrone;
+    private bool _targetFound;
+
     private void Awake()
     {
         var mesh = DetectionMeshFilter.mesh;
@@ -104,18 +120,15 @@ public class DetectionTester : MonoBehaviour
         for (int i = 0; i < _layerAmount; i++)
         {
             _visPixels[i] = new Color32[_detectionVerts.Length];
+            var toggleIndex = i;
+            VisToggles[i].onValueChanged.AddListener((value) => SetLayerVisibility(toggleIndex, value));
         }
-        VisToggles[0].onValueChanged.AddListener((value) => SetLayerVisibility(0, value));
-        VisToggles[1].onValueChanged.AddListener((value) => SetLayerVisibility(1, value));
-        VisToggles[2].onValueChanged.AddListener((value) => SetLayerVisibility(2, value));
-        VisToggles[3].onValueChanged.AddListener((value) => SetLayerVisibility(3, value));
-        VisToggles[4].onValueChanged.AddListener((value) => SetLayerVisibility(4, value));
 
 
         for (int i = 0; i < _detectionVerts.Length; i++)
         {
             var data = _vertexDetectionData[i];
-            data.RecordedEvents = new DetectionEvent[RecordedEventCount];
+            data.Events = new TerrainDetectionEvent[RecordedEventCount];
             data.Position = DetectionMeshFilter.transform.TransformPoint(_detectionVerts[i]);
             _vertexDetectionData[i] = data;
         }
@@ -125,28 +138,27 @@ public class DetectionTester : MonoBehaviour
             throw new MissingComponentException($"No drone path sampler found in {DronePathSampler.name}!");
         }
 
-        _droneStart = new Vector3(_droneStart.x, Terrain.SampleHeight(_droneStart), _droneStart.z);
+        DroneStart = new Vector3(DroneStart.x, Terrain.SampleHeight(DroneStart) + 0.1f, DroneStart.z);
 
         DroneVisualiser.Initialize(DroneCount);
-        DroneVisualiser.Visualise(_droneStart, DetectionAngle, Enumerable.Repeat(1f, DroneCount).ToArray());
+        DroneVisualiser.Visualise(DroneStart, DetectionAngle, Enumerable.Repeat(1f, DroneCount).ToArray());
         DetectionAngleInput.text = DetectionAngle.ToString();
         MaxDetectionDistanceInput.text = MaxDetectionDistance.ToString();
         DetectionThresholdInput.text = DetectionThreshold.ToString();
         DetectionSimulationStepsInput.text = DetectionSimulationSteps.ToString();
         DetectionRayCountInput.text = DetectionRayCount.ToString();
-
-
     }
 
     public void StartDetectionTest()
     {
+        FindTimeIndicator.gameObject.SetActive(false);
         DetectionAngle = float.Parse(DetectionAngleInput.text);
         _detectionCircleRelativeHeight = -0.5f / Mathf.Tan(DetectionAngle * Mathf.Deg2Rad);
         MaxDetectionDistance = float.Parse(MaxDetectionDistanceInput.text);
         DetectionThreshold = int.Parse(DetectionThresholdInput.text);
         DetectionRayCount = int.Parse(DetectionRayCountInput.text);
         DetectionSimulationSteps = int.Parse(DetectionSimulationStepsInput.text);
-        _dronePathSampler.InitializePaths(DroneCount, _droneStart);
+        _dronePathSampler.InitializePaths(DroneCount, DroneStart);
         Debug.Log("Detecting");
         _ = StartAsyncDetection();
     }
@@ -174,13 +186,13 @@ public class DetectionTester : MonoBehaviour
         }
         Debug.Log("Visualising");
         await Awaitable.NextFrameAsync();
-        StartCoroutine(VisualiseDetectionData(TimeSlider.value));
+        VisualiseDetectionData(TimeSlider.value);
         Debug.Log("Done");
     }
 
     private async Awaitable DetectionAsync(int steps, IDronePathSampler pathSampler)
     {
-        bool targetFound = false;
+        _targetFound = false;
         await Awaitable.EndOfFrameAsync();
         Vector3[,] locations = new Vector3[DroneCount, steps];
         Vector3[,,] randomDirections = new Vector3[DroneCount, steps, DetectionRayCount];
@@ -224,11 +236,11 @@ public class DetectionTester : MonoBehaviour
                         for (int vertexIndex = 0; vertexIndex < 3; vertexIndex++)
                         {
                             var detectionVertex = _vertexDetectionData[_detectionTris[hit.triangleIndex * 3 + vertexIndex]];
-                            if (detectionVertex.EventCount < detectionVertex.RecordedEvents.Length)
+                            if (detectionVertex.EventCount < detectionVertex.Events.Length)
                             {
-                                detectionVertex.RecordedEvents[detectionVertex.EventCount].DetectionVector = (location - detectionVertex.Position);
-                                detectionVertex.RecordedEvents[detectionVertex.EventCount].Time = progress;
-                                detectionVertex.RecordedEvents[detectionVertex.EventCount].DroneIndex = droneIndex;
+                                detectionVertex.Events[detectionVertex.EventCount].DetectionVector = (location - detectionVertex.Position);
+                                detectionVertex.Events[detectionVertex.EventCount].Time = progress;
+                                detectionVertex.Events[detectionVertex.EventCount].DroneIndex = droneIndex;
                                 detectionVertex.EventCount++;
                             }
                             detectionVertex.SummedDetectionVector += (location - detectionVertex.Position).normalized
@@ -238,7 +250,9 @@ public class DetectionTester : MonoBehaviour
                         }
                     } else if (hit.collider.TryGetComponent(out DetectionTarget _))
                     {
-                        targetFound = true;
+                        _targetFound = true;
+                        _targetFoundTime = progress;
+                        _targetFindingDrone = droneIndex;
                     }
                 }
             }
@@ -248,8 +262,14 @@ public class DetectionTester : MonoBehaviour
         {
             droneResult.Dispose();
         }
+        _simulationId = $"Simulation {DateTime.Now.DayOfYear}-{DateTime.Now.Hour}-{DateTime.Now.Minute}";
+        if (_targetFound)
+        {
+            FindTimeIndicator.gameObject.SetActive(true);
+            FindTimeIndicator.anchoredPosition = new Vector2(Mathf.Lerp(FTIndicatorMinX, 0, _targetFoundTime), FindTimeIndicator.anchoredPosition.y);
+        } 
         _doneDetecting = true;
-        Debug.Log($"Target found: {targetFound}");
+        Debug.Log($"Target found: {_targetFound}");
     }
 
     public void Visualise()
@@ -259,7 +279,7 @@ public class DetectionTester : MonoBehaviour
     public void VisualiseAtTime(float t)
     {
         if (!_doneDetecting) { return; }
-        StartCoroutine(VisualiseDetectionData(t));
+        VisualiseDetectionData(t);
     }
 
     public void UpdateDetectionThreshold()
@@ -280,18 +300,19 @@ public class DetectionTester : MonoBehaviour
         }
     }
 
-    private IEnumerator VisualiseDetectionData(float t)
+    private void VisualiseDetectionData(float t)
     {
         int mostSeen = 0;
         int mostValidEvents = 0;
         float largestMagnitude = 0;
         Color[] visColors = new Color[_layerAmount];
         DetectionThreshold = int.Parse(DetectionThresholdInput.text);
+
         foreach (var d in _vertexDetectionData)
         {
             for (int i = d.EventCount - 1; i >= 0; i--)
             {
-                if (d.RecordedEvents[i].Time <= t && i > mostValidEvents)
+                if (d.Events[i].Time <= t && i > mostValidEvents)
                 {
                     mostValidEvents = i + 1;
                     break;
@@ -305,51 +326,47 @@ public class DetectionTester : MonoBehaviour
 
         for (int i = 0; i < _vertexDetectionData.Length; i++)
         {
+            ClearColors(visColors);
             var data = _vertexDetectionData[i];
             Vector3 summedPartialDetectionVector = new();
             int validEvents = data.EventCount;
             int[] droneSeens = new int[DroneCount];
-
             for (int eventIndex = 0; eventIndex < data.EventCount; eventIndex++)
             {
-                var recordedEvent = data.RecordedEvents[eventIndex];
+                var recordedEvent = data.Events[eventIndex];
                 if (recordedEvent.Time > t)
                 {
                     validEvents = eventIndex;
                     break;
                 }
-                summedPartialDetectionVector += data.RecordedEvents[eventIndex].DetectionVector;
-                droneSeens[data.RecordedEvents[eventIndex].DroneIndex]++;
-            }
-            int mostSeenByDroneIndex = 0;
-            for (int droneIndex = 0; droneIndex < droneSeens.Length; droneIndex++)
-            {
-                if (droneSeens[droneIndex] > droneSeens[mostSeenByDroneIndex])
-                {
-                    mostSeenByDroneIndex = droneIndex;
-                }
-            }
-            var n = summedPartialDetectionVector.normalized;
-
-            for (int c = 0; c < 5; c++)
-            {
-                visColors[c] = new(0, 0, 0, 0);
+                summedPartialDetectionVector += data.Events[eventIndex].DetectionVector;
+                droneSeens[data.Events[eventIndex].DroneIndex]++;
             }
 
             if (validEvents >= DetectionThreshold)
             {
+                var n = summedPartialDetectionVector.normalized;
                 var dimmingFactor = ((validEvents / (float)mostValidEvents) + (data.SummedDetectionVector.magnitude / largestMagnitude)) / 2;
+                var lastSeen = data.Events[data.EventCount - 1].Time;
+                int mostSeenByDroneIndex = CalculateMostSeenByDroneIndex(droneSeens);
+                int seenBy = 0;
+                for (int droneIndex = 0; droneIndex < DroneCount; droneIndex++)
+                {
+                    seenBy += droneSeens[droneIndex] > 0 ? 1 : 0;
+                }
+                bool hasOverlap = seenBy > 1;
+                float overlapAmount = hasOverlap ? ((float)seenBy / DroneCount) : 0;
                 visColors[(int)VisLayer.Detection] = new Color(n.x, n.y, n.z) * new Color(dimmingFactor, dimmingFactor, dimmingFactor);
                 visColors[(int)VisLayer.Drone] = DroneColors[mostSeenByDroneIndex];
-                var lastSeen = data.RecordedEvents[data.EventCount - 1].Time;
                 visColors[(int)VisLayer.Time] = new(lastSeen, lastSeen, lastSeen);
+                visColors[(int)VisLayer.Overlap] = new Color(overlapAmount, overlapAmount, overlapAmount, hasOverlap ? 1 : 0);
             }
             else
             {
                 visColors[(int)VisLayer.Undetected] = Color.red;
             }
-            var pixelIndex = _visPixels[(int)VisLayer.Detection].Length - 1 - ((int)Mathf.Clamp(data.Position.x, 0, _sideLength - 1) + ((int)Mathf.Clamp(data.Position.z, 0, _sideLength - 1)) * _sideLength);
-            for (int layer = 0; layer < 5; layer++)
+            var pixelIndex = _visPixels[0].Length - 1 - ((int)Mathf.Clamp(data.Position.x, 0, _sideLength - 1) + ((int)Mathf.Clamp(data.Position.z, 0, _sideLength - 1)) * _sideLength);
+            for (int layer = 0; layer < _layerAmount; layer++)
             {
                 _visPixels[layer][pixelIndex] = visColors[layer];
             }
@@ -372,12 +389,35 @@ public class DetectionTester : MonoBehaviour
         }
         DroneVisualiser.Visualise(dronePositions, DetectionAngle, distances);
         CameraController.Retarget();
-        yield return null;
     }
+
+    private static int CalculateMostSeenByDroneIndex(int[] droneSeens)
+    {
+        int mostSeenByDroneIndex = 0;
+        for (int droneIndex = 0; droneIndex < droneSeens.Length; droneIndex++)
+        {
+            if (droneSeens[droneIndex] > droneSeens[mostSeenByDroneIndex])
+            {
+                mostSeenByDroneIndex = droneIndex;
+            }
+        }
+
+        return mostSeenByDroneIndex;
+    }
+
+    private static void ClearColors(Color[] visColors)
+    {
+        for (int c = 0; c < 5; c++)
+        {
+            visColors[c] = new(0, 0, 0, 0);
+        }
+    }
+
     private static bool IsEmptyPixel(Color32 pixel)
     {
         return pixel.r == 0 && pixel.g == 0 && pixel.b == 0 && pixel.a == 0;
     }
+
     private static float SmoothedRandom01()
     {
         return (Utils.Easing.EaseInSine(Mathf.Abs(Random.insideUnitCircle.x))
@@ -399,22 +439,35 @@ public class DetectionTester : MonoBehaviour
 
     public void ExportImages(bool exportOnlyVisible)
     {
-        Debug.LogError("FIX THIS");
+        if (!_doneDetecting) { return; }
+        Texture2D outputTexture = new (_sideLength, _sideLength);
+        var simulationFolderPath = Path.Combine(Application.persistentDataPath, _simulationId);
+        Directory.CreateDirectory(simulationFolderPath);
+        Debug.Log($"baking data to {simulationFolderPath}");
+
         for (int i = 0; i < _layerAmount; i++)
         {
-            if (exportOnlyVisible || VisToggles[i].isOn)
+            if (!exportOnlyVisible || VisToggles[i].isOn)
             {
-                //var png = _visTextureArray.Get[(int)VisLayer.Detection].EncodeToPNG();
-                //var path = Path.Combine(Application.persistentDataPath, $"{(VisLayer)i}AtTime{TimeSlider.value}{DateTime.Now.ToUniversalTime():u}.png");
-                //Debug.Log($"baking data to {path}");
-                //File.WriteAllBytes(path, png);
+                outputTexture.SetPixels32(_visTextureArray.GetPixels32(i));
+                outputTexture.Apply();
+                var png = outputTexture.EncodeToPNG();
+                var path = Path.Combine(simulationFolderPath, $"{(VisLayer)i} T-{TimeSlider.value}.png");
+                File.WriteAllBytes(path, png);
             }
         }
     }
 
+    public void VisualiseFindingMoment()
+    {
+        if (!_doneDetecting) { return; }
+        TimeSlider.SetValueWithoutNotify(_targetFoundTime);
+        VisualiseAtTime(_targetFoundTime);
+    }
+
     private void SetLayerVisibility(int layer, bool on)
     {
-        
+        if (!_doneDetecting) { return; }
         Debug.Log($"layer: {layer} _Show{Enum.GetName(typeof(VisLayer), layer)}");
         _visMaterial.SetInt($"_Show{Enum.GetName(typeof(VisLayer), layer)}", on ? 1 : 0);
     }

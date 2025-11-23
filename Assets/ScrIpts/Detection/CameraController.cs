@@ -84,7 +84,7 @@ namespace Detection
         {
             _currentTarget = target;
             target -= 2;
-            Debug.Log((CameraTarget)target);
+            //Debug.Log((CameraTarget)target);
 
             if (target == (int)CameraTarget.Default)
             {
