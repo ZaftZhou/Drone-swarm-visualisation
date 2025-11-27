@@ -2,16 +2,27 @@ using UnityEngine;
 
 public class DroneDetails : MonoBehaviour 
 {
-    public Vector3 startLocation;
-    public Vector3 pBest;
     public Vector3 position;
     public Vector3 velocity;
+    
+    public Vector3 pBestPos;
+    public float pbestFScore;
+    public float pbestObjDist;
+    public float pbestNodeDist;
+    public Vector3 pbestNodePos;
 
-    public DroneDetails(Vector3 _startLocation, Vector3 _pBest, Vector3 _position, Vector3 _velocity)
+    public int droneId;
+
+    public void Initialize(Vector3 _startPosition, float _startFScore, float _startObstacleDist, Vector3 _startNodePos)
     {
-        startLocation = _startLocation;
-        pBest = _pBest;
-        position = _position;
-        velocity = _velocity;
+        position = _startPosition;
+        velocity = Vector3.zero;
+
+        pBestPos = _startPosition;
+        pbestFScore = float.MinValue;
+        pbestObjDist = float.MaxValue;
+
+        pbestNodeDist = Vector3.Distance(_startNodePos, _startPosition);
+        pbestNodePos = _startNodePos;
     }
 }

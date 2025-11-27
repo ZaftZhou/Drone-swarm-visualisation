@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class ParticleSwarmAlgorithm : MonoBehaviour
 {
@@ -16,15 +17,34 @@ public class ParticleSwarmAlgorithm : MonoBehaviour
     public float droneFlightHeight;
     public GameObject dronePrefab;
 
-    private GameObject[] dronePrefabs;
-    public Vector3 gBest;
+    [Header("Fitness Score Setup")]
+    public NodeGrid nodeGrid;
+    public GameObject[] obstacleList;
 
+    [Header("Best Values - Global Best")]
+    public Vector3 gBestPos;
+    public float gBestFScore;
+
+    // --- Internal Variables ---
+    private DroneDetails[] _droneDetails;
+    private Transform[] _droneTransforms;
     private int loopCount;
 
     private void Start()
     {
-        dronePrefabs = new GameObject[droneAmount];
+        _droneDetails = new DroneDetails[droneAmount];
+        _droneTransforms = new Transform[droneAmount];
+
+        if (obstacleList == null || obstacleList.Length == 0)
+        {
+            Debug.LogError("Obstacle list is empty! Cannot calculate path risk!");
+        }
+
         SpawnDrones();
+
+        gBestPos = _droneDetails[0].pBestPos;
+        gBestFScore = _droneDetails[0].pbestFScore;
+
         //MainLoop();
     }
 
@@ -35,92 +55,154 @@ public class ParticleSwarmAlgorithm : MonoBehaviour
         {
             MainLoop();
             loopCount++;
+            Debug.Log($"PSO Iteration: {loopCount}/{maxIter}. gBest Score: {gBestPos}");
         }
     }
 
     void SpawnDrones()
     {
-        DroneDetails dDet;
+        Vector3 startNodePos = (nodeGrid != null && nodeGrid.nodes != null && 
+                                nodeGrid.nodes.GetLength(0) > 0 && nodeGrid.nodes.GetLength(1) > 0) ?
+                                nodeGrid.nodes[0,0].worldPosition : Vector3.zero;
 
         for (int i = 0; i < droneAmount; i++)
         {
-            var spawnedDrone = Instantiate(dronePrefab, SpawnRange(), Quaternion.identity);
-            spawnedDrone.name = $"Drone[{i}]";
-            dronePrefabs[i] = spawnedDrone;
+            Vector3 spawnPosition = SpawnRange();
 
-            dDet = dronePrefabs[i].GetComponent<DroneDetails>();
-            dDet.startLocation = dronePrefabs[i].transform.position;
+            var spawnedDrone = Instantiate(dronePrefab, spawnPosition, Quaternion.identity);
+            spawnedDrone.name = $"Drone[{i}]";
+            _droneTransforms[i] = spawnedDrone.transform;
+
+            DroneDetails droneDetails = spawnedDrone.GetComponent<DroneDetails>();
+            if (droneDetails == null)
+            { Debug.LogError("Missing DroneDetails component!"); return;}
+            _droneDetails[i] = droneDetails;
+
+            droneDetails.droneId = i;
+            droneDetails.Initialize(spawnPosition, 0f, 0f, startNodePos);
         }
     }
 
     Vector3 SpawnRange()
     {
-        Vector3 limitedSpawn = new (Random.Range(-forestArea, forestArea), droneFlightHeight, Random.Range(-forestArea, forestArea));
-        return limitedSpawn;
+        return new Vector3(
+            Random.Range(-forestArea, forestArea), 
+            droneFlightHeight, 
+            Random.Range(-forestArea, forestArea)
+        );
     }
 
 
     void MainLoop()
     {
-        DroneDetails dDet;
-        Transform dPos;
+        //Vector3 possibleGlobalBestPosition;
 
         //for(int iter = 0; iter < maxIter; iter++)
         //{
-        for(int i = 0; i < droneAmount; i++)
+
+        // DroneBest -Loop
+        for (int i = 0; i < droneAmount; i++)
         {
-            dDet = dronePrefabs[i].GetComponent<DroneDetails>();
-            dPos = dronePrefabs[i].transform;
+            DroneDetails dDetails = _droneDetails[i];
+            Transform dTransform = _droneTransforms[i];
 
-            dDet.position = dPos.position;
-            dDet.velocity += inertiaWeight * dDet.velocity +
-                             cognitiveWeight * (dDet.pBest -  dDet.position) +
-                             socialWeight * (gBest - dDet.position);
-            dPos.position += dDet.velocity;
+            float r1 = Random.value;
+            float r2 = Random.value;
+            
+            Vector3 cognitiveTerm = cognitiveWeight * r1 * (dDetails.pBestPos - dDetails.position);
+            Vector3 socialTerm = socialWeight * r2 * (gBestPos - dDetails.position);
 
-            CheckLimits(dPos);
+            dDetails.velocity = (inertiaWeight * dDetails.velocity) + cognitiveTerm + socialTerm;
 
-            if (dDet.pBest.magnitude < Vector3.Distance(dDet.position, dDet.startLocation)) // Needs fixin, startLocation is zero vectornow, needs to be the startLocation of drone
-                                                                                            // the location of farthest unsearched gridnode. I.E. Fitness score
-            {
-                dDet.pBest = dDet.position;
-            }
 
-            if (dDet.pBest.magnitude < gBest.magnitude)
-            {
-                gBest = dDet.position;
-            }
+            dTransform.position += dDetails.velocity;
+            dDetails.position = dTransform.position;
 
-            //if (Vector3.Distance(dDet.pBest, dDet.startLocation) < Vector3.Distance(dDet.position, dDet.startLocation)) { }
+
+            CheckLimits(dTransform);
+
+
+            CalculateAndSetPBest(dDetails, dTransform);
         }
-        //}
+
+        UpdateGBest();
     }
 
-    void CheckLimits(Transform dPos)
+    void CalculateAndSetPBest(DroneDetails dDetails, Transform dTransform)
     {
-        // TO-DO: Limit drone area
-        if (dPos.position.x < -forestArea)
-        {
-            dPos.position = Vector3.right * 2f;
-        }
-        if (dPos.position.z < -forestArea)
-        {
-            dPos.position = Vector3.back * 2f;
-        }
-        if (dPos.position.x > forestArea)
-        {
-            dPos.position = Vector3.left * 2f;
-        }
-        if (dPos.position.z > forestArea)
-        {
-            dPos.position = Vector3.forward * 2f;
-        }
+        float obstacleDist = float.MaxValue;
+        float nodeDist;
 
-        if (dPos.position.y != 2)
+        foreach (var obstacle in obstacleList)
         {
-            dPos.position = new Vector3(dPos.position.x, 2, dPos.position.z);
+            float currentDist = Vector3.Distance(obstacle.transform.position, dTransform.position);
+
+            if (currentDist < obstacleDist)
+            {
+                obstacleDist = currentDist;
+            }
+        }
+        dDetails.pbestObjDist = obstacleDist;
+
+
+        Vector3 currentPbestNodePos = Vector3.zero;
+        float currentPbestNodeDist = float.MinValue;
+
+        foreach (var node in nodeGrid.nodes)
+        {
+            nodeDist = Vector3.Distance(node.worldPosition, dTransform.position);
+
+            if (nodeDist > currentPbestNodeDist)
+            {
+                currentPbestNodeDist = nodeDist;
+                currentPbestNodePos = node.worldPosition;
+            }
+        }
+        dDetails.pbestNodeDist = currentPbestNodeDist;
+        dDetails.pbestNodePos = currentPbestNodePos;
+
+
+        float fScore = dDetails.pbestObjDist - dDetails.pbestNodeDist;
+
+        if (dDetails.pbestFScore < fScore)
+        {
+            dDetails.pbestFScore = fScore;
+            dDetails.pBestPos = dDetails.position;
         }
     }
+
+
+    void UpdateGBest()
+    {
+        // GlobalBest -Loop
+        for (int i = 0; i < droneAmount; i++)
+        {
+            DroneDetails dDetails = _droneDetails[i];
+
+            if (dDetails.pbestFScore > gBestFScore)
+            {
+                gBestFScore = dDetails.pbestFScore;
+                gBestPos = dDetails.pBestPos;
+            }
+        }
+    }
+    //}
+    
+
+    void CheckLimits(Transform dTransform)
+    {
+        dTransform.position = new Vector3 (
+            Mathf.Clamp(dTransform.position.x, -forestArea, forestArea),
+            dTransform.position.y,
+            Mathf.Clamp(dTransform.position.z, -forestArea, forestArea)
+        );
+
+        if (dTransform.position.y != droneFlightHeight)
+        {
+            dTransform.position = new Vector3(dTransform.position.x, droneFlightHeight, dTransform.position.z);
+        }
+    }
+
 
     // !!! IMPORTANT NOTES !!!
     // Need to make a funtional inertiaWeight decrease with each iter,
