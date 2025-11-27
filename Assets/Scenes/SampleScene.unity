@@ -645,6 +645,48 @@ MonoBehaviour:
   minMax: {x: 24.657545, y: 90}
   minFalloff: 28.4
   maxFalloff: 14.4
+--- !u!114 &1320348581
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1d046e3917e4d8580903c69758b6558, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: sc.terrain.painter.runtime::sc.terrain.proceduralpainter.Height
+  enabled: 1
+  label: Height
+  blendMode: 0
+  opacity: 100
+  passIndex: 0
+  min: 0
+  minFalloff: 100
+  max: 190
+  maxFalloff: 1
+--- !u!114 &1631839775
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e07d49e90874d70b9937cb753327a2d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: sc.terrain.painter.runtime::sc.terrain.proceduralpainter.Noise
+  enabled: 1
+  label: Noise
+  blendMode: 0
+  opacity: 100
+  passIndex: 4
+  noiseType: 0
+  noiseScale: 26.42
+  noiseOffset: {x: 0, y: 0}
+  levels: {x: 0.33561623, y: 0.86849284}
 --- !u!1001 &1729912256
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -829,6 +871,11 @@ MonoBehaviour:
     layer: {fileID: 8574412962073106934, guid: 69debc15b685aef4aa7bb2783ddd8a2b, type: 2}
     modifierStack:
     - {fileID: 963965469}
+  - enabled: 1
+    layer: {fileID: 8574412962073106934, guid: 5b3507bcbd5150e4f9b00d4baef50910, type: 2}
+    modifierStack:
+    - {fileID: 1320348581}
+    - {fileID: 1631839775}
   - enabled: 1
     layer: {fileID: 8574412962073106934, guid: 197c69b8ad78cef4cabd2584d4d48745, type: 2}
     modifierStack:
