@@ -2,12 +2,17 @@ using UnityEngine;
 
 public class NodeGrid : MonoBehaviour
 {
+    [Header("Grid Setup")]
     public LayerMask unsearchableMask;
+    [Tooltip("The total width (x) and depth (y) of the grid area.")]
     public Vector2 gridSize;
+    [Tooltip("Radius of each node (used for Physics checks).")]
     public float nodeRadius;
+    [Tooltip("Height offset of the grid from the GameObject's position.")]
     public float gridHeight;
 
-
+    // The 2D array that holds all node data.
+    // NOTE: This array MUST be exposed as public to be accessed by ParticleSwarmAlgorithm.
     public NodeSquare[,] nodes;
 
     float nodeDiameter;
@@ -44,10 +49,14 @@ public class NodeGrid : MonoBehaviour
             }
         }
     }
+
+    /// <summary>
+    /// Converts a world position (like a drone's current location) into the corresponding NodeSquare object.
+    /// </summary>
     public NodeSquare GridFromWorldPoint(Vector3 worldPosition)
     {
-        float percentX = (worldPosition.x / gridSize.x) + 0.5f;
-        float percentY = (worldPosition.z / gridSize.y) + 0.5f;
+        float percentX = ((worldPosition.x - transform.position.x) / gridSize.x) + 0.5f;
+        float percentY = ((worldPosition.z - transform.position.z) / gridSize.y) + 0.5f;
 
         percentX = Mathf.Clamp01(percentX);
         percentY = Mathf.Clamp01(percentY);
@@ -57,6 +66,8 @@ public class NodeGrid : MonoBehaviour
 
         return nodes[x, y];
     }
+
+    // --- Editor Visuals ---
     private void OnDrawGizmos()
     {
         Gizmos.DrawWireCube(transform.position, new Vector3(gridSize.x, 1, gridSize.y));

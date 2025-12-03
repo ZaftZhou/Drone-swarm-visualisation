@@ -259,9 +259,11 @@ GameObject:
   m_Component:
   - component: {fileID: 7510647261432482378}
   - component: {fileID: 7931773776855812223}
+  - component: {fileID: 6465135678653607101}
+  - component: {fileID: -6879751768252877771}
   m_Layer: 6
   m_Name: drone_low(PSO)
-  m_TagString: Untagged
+  m_TagString: Drone
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -296,14 +298,50 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c3e143cc80aff8d43b93f81b82c77e0a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DroneDetails
-  startLocation: {x: 0, y: 0, z: 0}
-  pBest: {x: 0, y: 0, z: 0}
   position: {x: 0, y: 0, z: 0}
   velocity: {x: 0, y: 0, z: 0}
+  pBestPos: {x: 0, y: 0, z: 0}
   pbestFScore: 0
   pbestObjDist: 0
   pbestNodeDist: 0
   pbestNodePos: {x: 0, y: 0, z: 0}
+  droneId: 0
+  droneCollisionCheck: {fileID: 0}
+--- !u!114 &6465135678653607101
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7218681440333116530}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 77af96970c8667e45b352ead3d378b51, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DroneCollisionCheck
+  repulsionRadius: 5
+  repulsionStrength: 10
+--- !u!135 &-6879751768252877771
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7218681440333116530}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 10
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1001 &8946685137037752484
 PrefabInstance:
   m_ObjectHideFlags: 0

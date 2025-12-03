@@ -133,7 +133,7 @@ GameObject:
   - component: {fileID: 67888788}
   m_Layer: 8
   m_Name: Wall (12)
-  m_TagString: Tree
+  m_TagString: Obstacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -224,7 +224,7 @@ Transform:
   m_GameObject: {fileID: 67888787}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -62.9, y: 20, z: -69.5}
+  m_LocalPosition: {x: -62.9, y: 20, z: -57.9}
   m_LocalScale: {x: 10, y: 50, z: 10}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -275,7 +275,7 @@ GameObject:
   - component: {fileID: 221398932}
   m_Layer: 8
   m_Name: Wall (11)
-  m_TagString: Tree
+  m_TagString: Obstacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -386,7 +386,7 @@ GameObject:
   - component: {fileID: 270269112}
   m_Layer: 8
   m_Name: Wall (2)
-  m_TagString: Tree
+  m_TagString: Obstacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -497,7 +497,7 @@ GameObject:
   - component: {fileID: 313093984}
   m_Layer: 8
   m_Name: Wall (5)
-  m_TagString: Tree
+  m_TagString: Obstacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -588,7 +588,7 @@ Transform:
   m_GameObject: {fileID: 313093983}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -11.1, y: 20, z: -22.8}
+  m_LocalPosition: {x: 68.2, y: 20, z: -37.6}
   m_LocalScale: {x: 10, y: 50, z: 10}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -608,7 +608,7 @@ GameObject:
   - component: {fileID: 332444937}
   m_Layer: 8
   m_Name: Wall (1)
-  m_TagString: Tree
+  m_TagString: Obstacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -719,7 +719,7 @@ GameObject:
   - component: {fileID: 390057683}
   m_Layer: 8
   m_Name: Wall (13)
-  m_TagString: Tree
+  m_TagString: Obstacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -810,7 +810,7 @@ Transform:
   m_GameObject: {fileID: 390057682}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -36.8, y: 20, z: 8.6}
+  m_LocalPosition: {x: 86.2, y: 20, z: 0.1}
   m_LocalScale: {x: 10, y: 50, z: 10}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1068,7 +1068,7 @@ GameObject:
   - component: {fileID: 657425213}
   m_Layer: 8
   m_Name: Wall (14)
-  m_TagString: Tree
+  m_TagString: Obstacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1179,7 +1179,7 @@ GameObject:
   - component: {fileID: 732909627}
   m_Layer: 8
   m_Name: Wall (3)
-  m_TagString: Tree
+  m_TagString: Obstacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1270,7 +1270,7 @@ Transform:
   m_GameObject: {fileID: 732909626}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -31.3, y: 20, z: -36.5}
+  m_LocalPosition: {x: -23.3, y: 20, z: -66.4}
   m_LocalScale: {x: 10, y: 50, z: 10}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1339,7 +1339,7 @@ GameObject:
   - component: {fileID: 1073679918}
   m_Layer: 8
   m_Name: Wall (9)
-  m_TagString: Tree
+  m_TagString: Obstacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1529,7 +1529,7 @@ GameObject:
   - component: {fileID: 1386405255}
   m_Layer: 8
   m_Name: Wall (4)
-  m_TagString: Tree
+  m_TagString: Obstacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1640,7 +1640,7 @@ GameObject:
   - component: {fileID: 1440779689}
   m_Layer: 8
   m_Name: Wall (6)
-  m_TagString: Tree
+  m_TagString: Obstacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1731,7 +1731,7 @@ Transform:
   m_GameObject: {fileID: 1440779688}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -15.4, y: 20, z: -50.5}
+  m_LocalPosition: {x: 56.8, y: 20, z: 53.8}
   m_LocalScale: {x: 10, y: 50, z: 10}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1751,7 +1751,7 @@ GameObject:
   - component: {fileID: 1449067371}
   m_Layer: 8
   m_Name: Wall (10)
-  m_TagString: Tree
+  m_TagString: Obstacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1862,7 +1862,7 @@ GameObject:
   - component: {fileID: 1641537359}
   m_Layer: 8
   m_Name: Wall
-  m_TagString: Tree
+  m_TagString: Obstacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1973,7 +1973,7 @@ GameObject:
   - component: {fileID: 1687898176}
   m_Layer: 8
   m_Name: Wall (8)
-  m_TagString: Tree
+  m_TagString: Obstacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2064,7 +2064,7 @@ Transform:
   m_GameObject: {fileID: 1687898175}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 8.7, y: 20, z: -8.2}
+  m_LocalPosition: {x: 33.7, y: 20, z: -82.1}
   m_LocalScale: {x: 10, y: 50, z: 10}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2221,7 +2221,7 @@ GameObject:
   - component: {fileID: 1832685969}
   m_Layer: 8
   m_Name: Wall (15)
-  m_TagString: Tree
+  m_TagString: Obstacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2312,7 +2312,7 @@ Transform:
   m_GameObject: {fileID: 1832685968}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -38.5, y: 20, z: -8.1}
+  m_LocalPosition: {x: 90.8, y: 20, z: 24}
   m_LocalScale: {x: 10, y: 50, z: 10}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2332,7 +2332,7 @@ GameObject:
   - component: {fileID: 2072679905}
   m_Layer: 8
   m_Name: Wall (7)
-  m_TagString: Tree
+  m_TagString: Obstacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2423,7 +2423,7 @@ Transform:
   m_GameObject: {fileID: 2072679904}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -23.4, y: 20, z: -10.5}
+  m_LocalPosition: {x: -24.3, y: 20, z: 2.9}
   m_LocalScale: {x: 10, y: 50, z: 10}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2490,7 +2490,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b2f09989cc86ea4f99cd5ee3f3f7c98, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ParticleSwarmAlgorithm
-  maxIter: 100
+  maxIter: 1000
   inertiaWeight: 0.5
   cognitiveWeight: 1.5
   socialWeight: 1.5
@@ -2516,7 +2516,8 @@ MonoBehaviour:
   - {fileID: 390057682}
   - {fileID: 657425212}
   - {fileID: 1832685968}
-  gBestPos: {x: 0, y: 0, z: 0}
+  searchThreshold: 3
+  gBestTarget: {x: 0, y: 0, z: 0}
   gBestFScore: 0
 --- !u!4 &2106579448
 Transform:
