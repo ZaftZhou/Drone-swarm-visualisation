@@ -1,7 +1,4 @@
 using System;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Unity.VisualScripting;
-using UnityEditor.PackageManager.UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -31,6 +28,8 @@ namespace Detection
         [SerializeField]
         private float _zoomAmount = 10f;
         [SerializeField]
+        private float _panAmount = 10f;
+        [SerializeField]
         private Transform _target;
         [SerializeField]
         DroneVisualiser _visualiser;
@@ -53,10 +52,17 @@ namespace Detection
         }
         private void Update()
         {
-            if (Mouse.current.middleButton.isPressed == true || Mouse.current.rightButton.isPressed == true)
+            if (Mouse.current.middleButton.isPressed || Mouse.current.rightButton.isPressed)
             {
-                var rot = transform.rotation.eulerAngles;
-                transform.rotation = Quaternion.Euler(rot.x, rot.y + Pointer.current.delta.x.ReadValue(), rot.z);
+                if (Keyboard.current.shiftKey.isPressed)
+                {
+                    _camera.localPosition += (_panAmount * Pointer.current.delta.y.ReadValue() * Vector3.up) +(_panAmount * Pointer.current.delta.x.ReadValue() * _camera.InverseTransformDirection(_camera.right) );
+                }
+                else
+                {
+                    var rot = transform.rotation.eulerAngles;
+                    transform.rotation = Quaternion.Euler(rot.x, rot.y + Pointer.current.delta.x.ReadValue(), rot.z);
+                }
             }
             if (Mouse.current.scroll.ReadValue().y != 0)
             {
@@ -102,6 +108,7 @@ namespace Detection
                 var offset = projectedDistance / Mathf.Tan(cameraTrueAngle * Mathf.Deg2Rad);
                 _camera.position = new Vector3(_camera.position.x, targetTransform.position.y + offset, _camera.position.z);
                 _zoomAmount = 5;
+                _panAmount = 0.1f;
             }
 
         }

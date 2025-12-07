@@ -8,10 +8,11 @@ public class DroneVisualiser : MonoBehaviour
 
     public void Initialize(int droneCount)
     {
+        Transform droneParent = Instantiate(new GameObject("Drones")).transform;
         _drones = new Transform[droneCount];
         for (int i = 0; i < droneCount; i++)
         {
-            _drones[i] = Instantiate(DronePrefab).transform;
+            _drones[i] = Instantiate(DronePrefab, droneParent).transform;
         }
     }
 
