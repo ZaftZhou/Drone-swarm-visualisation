@@ -56,7 +56,7 @@ namespace Detection
             {
                 if (Keyboard.current.shiftKey.isPressed)
                 {
-                    _camera.localPosition += (_panAmount * Pointer.current.delta.y.ReadValue() * Vector3.up) +(_panAmount * Pointer.current.delta.x.ReadValue() * _camera.InverseTransformDirection(_camera.right) );
+                    _camera.localPosition += (_panAmount * Pointer.current.delta.y.ReadValue() * Vector3.up * -1) + (_panAmount * Pointer.current.delta.x.ReadValue() * _camera.InverseTransformDirection(_camera.right) * -1);
                 }
                 else
                 {

@@ -89,7 +89,6 @@ namespace Detection
         public GameObject TargetPrefab;
         public float FTIndicatorMinX;
 
-
         private IDronePathSampler _dronePathSampler;
         private DetectionData[] _vertexDetectionData;
         private DetectionData[] _targetDetectionData;
@@ -149,7 +148,7 @@ namespace Detection
 
         private void InitializeDetectionDataStructures()
         {
-            _targetParent = Instantiate(new GameObject("Targets")).transform;
+            _targetParent = new GameObject("Targets").transform;
             _vertexDetectionData = new DetectionData[_detectionVerts.Length];
             var min = _detectionVerts.Min((vert) => vert.x);
             var max = _detectionVerts.Max((vert) => vert.x);
@@ -228,23 +227,23 @@ namespace Detection
 
         private async Awaitable StartAsyncDetection()
         {
-            ResetTerrainDetectionData();
-            ResetTargetDetectionData();
-            await Awaitable.NextFrameAsync();
             try
             {
+                ResetTerrainDetectionData();
+                ResetTargetDetectionData();
+                await Awaitable.NextFrameAsync();
                 await DetectionAsync(DetectionSimulationSteps, _dronePathSampler);
                 Debug.Log("Done detecting");
                 await Awaitable.NextFrameAsync();
+                Debug.Log("Visualising");
+                await Awaitable.NextFrameAsync();
+                VisualiseDetectionData(TimeSlider.value);
+                Debug.Log("Done");
             }
             catch (Exception ex)
             {
-                Debug.Log(ex);
+                Debug.LogError(ex);
             }
-            Debug.Log("Visualising");
-            await Awaitable.NextFrameAsync();
-            VisualiseDetectionData(TimeSlider.value);
-            Debug.Log("Done");
         }
 
         private void ResetTerrainDetectionData()
@@ -293,7 +292,7 @@ namespace Detection
             {
                 await Awaitable.EndOfFrameAsync();
 
-                droneResults[droneIndex] = new NativeArray<RaycastHit>(DetectionRayCount*3, Allocator.Persistent);
+                droneResults[droneIndex] = new NativeArray<RaycastHit>(DetectionRayCount, Allocator.Persistent);
                 for (int step = 0; step < steps; step++)
                 {
                     Vector3 droneLocation = droneLocations[droneIndex, step];
@@ -304,7 +303,7 @@ namespace Detection
                             new RaycastCommand(droneLocations[droneIndex, step], randomDirections[droneIndex, step, j], new QueryParameters() { layerMask = DetectionLayer }, MaxDetectionDistance);
                     }
 
-                    JobHandle handle = RaycastCommand.ScheduleBatch(droneCommands, droneResults[droneIndex], minCommandsPerJob: 5, maxHits: 3);
+                    JobHandle handle = RaycastCommand.ScheduleBatch(droneCommands, droneResults[droneIndex], minCommandsPerJob: 32, maxHits: 1);
                     //await Awaitable.NextFrameAsync();
                     handle.Complete();
                     foreach (var hit in droneResults[droneIndex])
@@ -312,36 +311,11 @@ namespace Detection
                         if (hit.collider == null) continue;
                         if (hit.collider.TryGetComponent(out DetectionPlane _))
                         {
-                            for (int vertexIndex = 0; vertexIndex < 3; vertexIndex++)
-                            {
-                                var detectionVertex = _vertexDetectionData[_detectionTris[hit.triangleIndex * 3 + vertexIndex]];
-                                if (detectionVertex.EventCount < detectionVertex.Events.Length)
-                                {
-                                    detectionVertex.Events[detectionVertex.EventCount].DetectionVector = detectionVertex.Position - droneLocation;
-                                    detectionVertex.Events[detectionVertex.EventCount].Time = progress;
-                                    detectionVertex.Events[detectionVertex.EventCount].DroneIndex = droneIndex;
-                                    detectionVertex.EventCount++;
-                                }
-                                detectionVertex.SummedDetectionVector += (droneLocation - detectionVertex.Position).normalized
-                                   * Mathf.Lerp(1f, 0.1f, (droneLocation - detectionVertex.Position).magnitude / MaxDetectionDistance);
-                                detectionVertex.TimesSeen++;
-                                _vertexDetectionData[_detectionTris[hit.triangleIndex * 3 + vertexIndex]] = detectionVertex;
-                            }
+                            HandeDetectionPlaneHit(droneIndex, droneLocation, progress, hit);
                         }
                         else if (hit.collider.TryGetComponent(out DetectionTarget target))
                         {
-                            var targetData = _targetDetectionData[target.index];
-                            if (targetData.EventCount < targetData.Events.Length)
-                            {
-                                targetData.Events[targetData.EventCount].DetectionVector = targetData.Position - droneLocation;
-                                targetData.Events[targetData.EventCount].Time = progress;
-                                targetData.Events[targetData.EventCount].DroneIndex = droneIndex;
-                                targetData.EventCount++;
-                            }
-                            targetData.SummedDetectionVector += (droneLocation - targetData.Position).normalized
-                               * Mathf.Lerp(1f, 0.1f, (droneLocation - targetData.Position).magnitude / MaxDetectionDistance);
-                            targetData.TimesSeen++;
-                            _vertexDetectionData[target.index] = targetData;
+                            HandleTargetHit(droneIndex, progress, droneLocation, target);
                         }
                     }
                 }
@@ -358,7 +332,7 @@ namespace Detection
             //    FindTimeIndicator.anchoredPosition = new Vector2(Mathf.Lerp(FTIndicatorMinX, 0, _targetFoundTime), FindTimeIndicator.anchoredPosition.y);
             //}
             _doneDetecting = true;
-           // Debug.Log($"Target found: {_targetFound}");
+            // Debug.Log($"Target found: {_targetFound}");
         }
 
         private void HandeDetectionPlaneHit(int droneIndex, Vector3 droneLocation, float progress, RaycastHit hit)
@@ -368,7 +342,7 @@ namespace Detection
                 var detectionVertex = _vertexDetectionData[_detectionTris[hit.triangleIndex * 3 + vertexIndex]];
                 if (detectionVertex.EventCount < detectionVertex.Events.Length)
                 {
-                    detectionVertex.Events[detectionVertex.EventCount].DetectionVector = (droneLocation - detectionVertex.Position);
+                    detectionVertex.Events[detectionVertex.EventCount].DetectionVector = droneLocation - detectionVertex.Position;
                     detectionVertex.Events[detectionVertex.EventCount].Time = progress;
                     detectionVertex.Events[detectionVertex.EventCount].DroneIndex = droneIndex;
                     detectionVertex.EventCount++;
@@ -384,9 +358,10 @@ namespace Detection
         {
 
             var targetData = _targetDetectionData[target.index];
+            
             if (targetData.EventCount < targetData.Events.Length)
             {
-                targetData.Events[targetData.EventCount].DetectionVector = (droneLocation - targetData.Position);
+                targetData.Events[targetData.EventCount].DetectionVector = droneLocation - targetData.Position;
                 targetData.Events[targetData.EventCount].Time = progress;
                 targetData.Events[targetData.EventCount].DroneIndex = droneIndex;
                 targetData.EventCount++;
@@ -394,7 +369,7 @@ namespace Detection
             targetData.SummedDetectionVector += (droneLocation - targetData.Position).normalized
                * Mathf.Lerp(1f, 0.1f, (droneLocation - targetData.Position).magnitude / MaxDetectionDistance);
             targetData.TimesSeen++;
-            _vertexDetectionData[target.index] = targetData;
+            _targetDetectionData[target.index] = targetData;
         }
 
         public void Visualise()
@@ -622,7 +597,17 @@ namespace Detection
                     File.WriteAllBytes(path, png);
                 }
             }
-            var j = JsonUtility.ToJson(_targetDetectionData[0]);
+            string j = "";
+            for (int targetIndex = 0; targetIndex < _targetDetectionData.Length; targetIndex++)
+            {
+                j += $"{JsonUtility.ToJson(_targetDetectionData[targetIndex])}\n";
+                for (int eventIndex = 0; eventIndex < _targetDetectionData[targetIndex].Events.Length; eventIndex++)
+                {
+                    j += $"\t{JsonUtility.ToJson(_targetDetectionData[targetIndex].Events[eventIndex])}\n";
+                }
+                j += "\n";
+            }
+
             var jpath = Path.Combine(simulationFolderPath, $"lmao.json");
             File.WriteAllText(jpath, j);
         }
