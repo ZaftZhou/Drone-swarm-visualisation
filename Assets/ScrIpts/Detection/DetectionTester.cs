@@ -8,7 +8,6 @@ using Unity.Jobs;
 using Unity.Collections;
 using System.Linq;
 using System.Collections.Generic;
-using static UnityEditor.Experimental.GraphView.GraphView;
 
 
 namespace Detection
@@ -184,7 +183,7 @@ namespace Detection
                 data.Events = new DetectionEvent[RecordedEventCount];
                 _targetDetectionData[i] = data;
             }
-            Debug.Log($"_targets.Count {_targets.Count}");
+            //Debug.Log($"_targets.Count {_targets.Count}");
         }
 
         private void PopulateSettingFieldsWithInternalValues()
@@ -294,7 +293,7 @@ namespace Detection
             {
                 await Awaitable.EndOfFrameAsync();
 
-                droneResults[droneIndex] = new NativeArray<RaycastHit>(DetectionRayCount, Allocator.Persistent);
+                droneResults[droneIndex] = new NativeArray<RaycastHit>(DetectionRayCount*3, Allocator.Persistent);
                 for (int step = 0; step < steps; step++)
                 {
                     Vector3 droneLocation = droneLocations[droneIndex, step];
@@ -501,8 +500,9 @@ namespace Detection
 
             for (int i = 0; i < VisToggles.Count; i++)
             {
-                _visTextureArray.SetPixels32(_visPixels[i], i);
-                _visMaterial.SetInt($"_Show{Enum.GetName(typeof(VisLayer), VisToggles[i].GetComponent<VisLayerToggle>().VisLayer)}", VisToggles[i].isOn ? 1 : 0);
+                var layer = VisToggles[i].GetComponent<VisLayerToggle>().VisLayer;
+                _visTextureArray.SetPixels32(_visPixels[(int)layer], (int)layer);
+                _visMaterial.SetInt($"_Show{Enum.GetName(typeof(VisLayer), layer)}", VisToggles[i].isOn ? 1 : 0);
             }
             _visTextureArray.Apply();
             _visMaterial.SetTexture("_VisTextures", _visTextureArray);
