@@ -9,9 +9,9 @@ using UnityEngine;
 public class PartitionedGridAlgorithm : AlgorithmBase
 {
     [Header("Grid Scan Parameters")]
-    [SerializeField] private float flightHeight = 20f;
+    [SerializeField] private readonly float flightHeight = 20f;
 
-    [SerializeField] private float scanRadius = 10f;
+    [SerializeField] private readonly float scanRadius = 10f;
 
     [Header("Density Control")]
     [SerializeField]
@@ -20,23 +20,23 @@ public class PartitionedGridAlgorithm : AlgorithmBase
 
     [SerializeField]
     [Range(0.0f, 0.5f)]
-    private float scanOverlap = 0.2f;
+    private readonly float scanOverlap = 0.2f;
 
     [Tooltip("网格模式")]
-    [SerializeField] private GridPattern gridPattern = GridPattern.Horizontal;
+    [SerializeField] private readonly GridPattern gridPattern = GridPattern.Horizontal;
 
     [Header("Advanced Settings")]
     [Tooltip("Scan along with edge")]
-    [SerializeField] private bool addEdgeScans = false;
+    [SerializeField] private readonly bool addEdgeScans = false;
 
-    [SerializeField] private bool optimizePath = true;
+    [SerializeField] private readonly bool optimizePath = true;
 
     [Header("Visualization")]
     [Tooltip("show debug path in scene")]
-    [SerializeField] private bool showDebugPath = true;
+    [SerializeField] private readonly bool showDebugPath = true;
 
     [Tooltip("Show Partitions")]
-    [SerializeField] private bool showPartitions = true;
+    [SerializeField] private readonly bool showPartitions = true;
 
     [Tooltip("Path color")]
     [SerializeField] private Color pathColor = Color.cyan;
@@ -179,19 +179,19 @@ public class PartitionedGridAlgorithm : AlgorithmBase
             float partitionMinX = startX + (i * sliceWidth);
             float partitionMaxX = partitionMinX + sliceWidth;
 
-            Vector3 partitionCenter = new Vector3(
+            Vector3 partitionCenter = new(
                 partitionMinX + (sliceWidth / 2f),
                 searchBounds.center.y,
                 searchBounds.center.z
             );
 
-            Vector3 partitionSize = new Vector3(
+            Vector3 partitionSize = new(
                 sliceWidth,
                 searchBounds.size.y,
                 searchBounds.size.z
             );
 
-            Bounds partition = new Bounds(partitionCenter, partitionSize);
+            Bounds partition = new(partitionCenter, partitionSize);
             dronePartitions.Add(drone, partition);
 
             if (showDebugInfo)
@@ -213,7 +213,7 @@ public class PartitionedGridAlgorithm : AlgorithmBase
 
     private Queue<Vector3> GenerateWaypointsForPartition(Bounds partition, Drone drone)
     {
-        List<Vector3> pathPoints = new List<Vector3>();
+        List<Vector3> pathPoints = new();
 
         switch (gridPattern)
         {
@@ -246,7 +246,7 @@ public class PartitionedGridAlgorithm : AlgorithmBase
 
     private List<Vector3> GenerateHorizontalPattern(Bounds partition)
     {
-        List<Vector3> points = new List<Vector3>();
+        List<Vector3> points = new();
 
         float xMin = partition.min.x;
         float xMax = partition.max.x;
@@ -298,7 +298,7 @@ public class PartitionedGridAlgorithm : AlgorithmBase
 
     private List<Vector3> GenerateVerticalPattern(Bounds partition)
     {
-        List<Vector3> points = new List<Vector3>();
+        List<Vector3> points = new();
 
         float xMin = partition.min.x;
         float xMax = partition.max.x;
@@ -334,7 +334,7 @@ public class PartitionedGridAlgorithm : AlgorithmBase
 
     private List<Vector3> GenerateDiagonalPattern(Bounds partition)
     {
-        List<Vector3> points = new List<Vector3>();
+        List<Vector3> points = new();
 
         float xMin = partition.min.x;
         float xMax = partition.max.x;
@@ -361,8 +361,8 @@ public class PartitionedGridAlgorithm : AlgorithmBase
             if (leftToRight)
             {
               
-                Vector3 start = new Vector3(xMin, y, zMin + offset);
-                Vector3 end = new Vector3(xMin + offset, y, zMin);
+                Vector3 start = new(xMin, y, zMin + offset);
+                Vector3 end = new(xMin + offset, y, zMin);
 
                 start = ClampPointToPartition(start, partition);
                 end = ClampPointToPartition(end, partition);
@@ -411,7 +411,7 @@ public class PartitionedGridAlgorithm : AlgorithmBase
 
     private List<Vector3> GenerateSpiralPattern(Bounds partition)
     {
-        List<Vector3> points = new List<Vector3>();
+        List<Vector3> points = new();
 
         float xMin = partition.min.x;
         float xMax = partition.max.x;
@@ -470,7 +470,7 @@ public class PartitionedGridAlgorithm : AlgorithmBase
 
         if (currentXMax > currentXMin && currentZMax > currentZMin)
         {
-            Vector3 center = new Vector3(
+            Vector3 center = new(
                 (currentXMin + currentXMax) / 2f,
                 y,
                 (currentZMin + currentZMax) / 2f
@@ -500,7 +500,7 @@ public class PartitionedGridAlgorithm : AlgorithmBase
 
         if (closestIndex > 0)
         {
-            List<Vector3> optimized = new List<Vector3>();
+            List<Vector3> optimized = new();
             for (int i = closestIndex; i < originalPath.Count; i++)
             {
                 optimized.Add(originalPath[i]);
@@ -591,7 +591,7 @@ public class PartitionedGridAlgorithm : AlgorithmBase
         }
 
         float totalLength = 0f;
-        List<float> cumulativeLengths = new List<float> { 0f }; // 第一个点的累积长度为0
+        List<float> cumulativeLengths = new() { 0f }; // 第一个点的累积长度为0
 
         for (int i = 0; i < path.Count - 1; i++)
         {
@@ -701,12 +701,12 @@ public class PartitionedGridAlgorithm : AlgorithmBase
             Color.yellow,           
             Color.cyan,             
             Color.magenta,          
-            new Color(1, 0.5f, 0),  
-            new Color(0.5f, 0, 1),  
-            new Color(0, 1, 0.5f), 
-            new Color(1, 0, 0.5f), 
-            new Color(0.5f, 1, 0),  
-            new Color(0, 0.5f, 1)   
+            new(1, 0.5f, 0),  
+            new(0.5f, 0, 1),  
+            new(0, 1, 0.5f), 
+            new(1, 0, 0.5f), 
+            new(0.5f, 1, 0),  
+            new(0, 0.5f, 1)   
         };
 
      

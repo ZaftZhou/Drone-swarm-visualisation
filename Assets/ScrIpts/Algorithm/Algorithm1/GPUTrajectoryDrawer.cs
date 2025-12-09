@@ -9,27 +9,27 @@ public class GPUTrajectoryDrawer : MonoBehaviour
 {
     [Header("Render Texture")]
     [SerializeField] private RenderTexture trajectoryRT;
-    [SerializeField] private int resolution = 2048;
+    [SerializeField] private readonly int resolution = 2048;
     
     [Header("Drawing")]
-    [SerializeField] private Material lineMaterial;
-    [SerializeField] private Color lineColor = new Color(0, 1, 1, 0.8f);
+    [SerializeField] private readonly Material lineMaterial;
+    [SerializeField] private Color lineColor = new(0, 1, 1, 0.8f);
     [SerializeField] private float lineWidth = 3f;
     
     [Header("Trajectory")]
     [SerializeField] private Transform drone;
-    [SerializeField] private float captureInterval = 0.05f;
-    [SerializeField] private int maxPoints = 10000;
-    [SerializeField] private bool continuousDrawing = true;
+    [SerializeField] private readonly float captureInterval = 0.05f;
+    [SerializeField] private readonly int maxPoints = 10000;
+    [SerializeField] private readonly bool continuousDrawing = true;
     
     [Header("Effects")]
     //[SerializeField] private bool useGlow = true;
     //[SerializeField] private float glowIntensity = 2f;
-    [SerializeField] private bool fadeTrail = false;
-    [SerializeField] [Range(0.9f, 1f)] private float fadeAmount = 0.98f;
+    [SerializeField] private readonly bool fadeTrail = false;
+    [SerializeField] [Range(0.9f, 1f)] private readonly float fadeAmount = 0.98f;
     
     private Camera renderCamera;
-    private List<Vector3> points = new List<Vector3>();
+    private readonly List<Vector3> points = new();
     private float nextCaptureTime;
     private Material fadeMaterial;
     private RenderTexture tempRT;
@@ -67,7 +67,7 @@ public class GPUTrajectoryDrawer : MonoBehaviour
 
     void SetupCamera()
     {
-        GameObject camObj = new GameObject("TrajectoryCamera");
+        GameObject camObj = new("TrajectoryCamera");
         camObj.transform.SetParent(transform);
         
         renderCamera = camObj.AddComponent<Camera>();

@@ -5,7 +5,7 @@ public class CoverageAnalyzer : MonoBehaviour
 {
     [Header("Referrence")]
     public Collider searchArea;
-    public List<Drone> drones = new List<Drone>();
+    public List<Drone> drones = new();
     public PartitionedGridAlgorithm algorithm;
 
     [Header("Grid setting")]
@@ -27,9 +27,9 @@ public class CoverageAnalyzer : MonoBehaviour
     [Header("Visualize")]
     public bool showCoverageGrid = true;
     public bool showStatistics = true;
-    public Color coveredColor = new Color(0, 1, 0, 0.3f);
-    public Color uncoveredColor = new Color(1, 0, 0, 0.3f);
-    public Color occludedColor = new Color(1, 0.5f, 0, 0.3f);
+    public Color coveredColor = new(0, 1, 0, 0.3f);
+    public Color uncoveredColor = new(1, 0, 0, 0.3f);
+    public Color occludedColor = new(1, 0.5f, 0, 0.3f);
     public bool showOnlyUncovered = false;
     public bool showRaycastDebug = false;
 
@@ -53,10 +53,10 @@ public class CoverageAnalyzer : MonoBehaviour
     // 统计
     private float coveragePercentage = 0f;
     private float effectiveCoveragePercentage = 0f;
-    private Dictionary<Drone, int> droneCoverageContribution = new Dictionary<Drone, int>();
+    private readonly Dictionary<Drone, int> droneCoverageContribution = new();
 
     // 调试用
-    private List<RaycastHit> lastRaycastHits = new List<RaycastHit>();
+    private readonly List<RaycastHit> lastRaycastHits = new();
 
     void Start()
     {
@@ -344,7 +344,7 @@ public class CoverageAnalyzer : MonoBehaviour
 
     public List<Vector3> GetUncoveredAreas()
     {
-        List<Vector3> uncovered = new List<Vector3>();
+        List<Vector3> uncovered = new();
 
         for (int x = 0; x < gridWidth; x++)
         {
@@ -412,7 +412,7 @@ public class CoverageAnalyzer : MonoBehaviour
                 }
 
                 Gizmos.color = color;
-                Vector3 size = new Vector3(gridResolution * 0.9f, 0.1f, gridResolution * 0.9f);
+                Vector3 size = new(gridResolution * 0.9f, 0.1f, gridResolution * 0.9f);
                 Gizmos.DrawCube(cellCenter, size);
 
                 Gizmos.color = new Color(color.r, color.g, color.b, 1f);

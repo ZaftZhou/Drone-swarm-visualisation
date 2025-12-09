@@ -1,55 +1,55 @@
-using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class SwarmTrajectoryDrawer : MonoBehaviour
 {
     [Header("Trajectory Texture")]
     [SerializeField] private RenderTexture trajectoryTexture;
 
-    [SerializeField] private int textureResolution = 1024;  
+    [SerializeField] private readonly int textureResolution = 1024;
 
     [Header("Performance Settings")]
-    [SerializeField] private float drawInterval = 0.1f; 
+    [SerializeField] private readonly float drawInterval = 0.1f;
 
-    [SerializeField][Range(1, 5)] private int frameSkip = 2;
+    [SerializeField][Range(1, 5)] private readonly int frameSkip = 2;
 
 
-    [SerializeField] private float minMoveDistance = 2f;  
+    [SerializeField] private readonly float minMoveDistance = 2f;
 
-    [SerializeField] private bool useGPUAcceleration = true;
+    [SerializeField] private readonly bool useGPUAcceleration = true;
 
     [Header("Drawing Settings")]
-      [SerializeField] private float lineWidth = 2f;  
+    [SerializeField] private readonly float lineWidth = 2f;
 
     [Tooltip("lineSmoothing (0=Fastest, 2=Most smooth)")]
     //[SerializeField][Range(0, 2)] private int lineSmoothing = 0;
 
     [Header("Color Settings")]
     [SerializeField]
-    private Color[] droneColors = new Color[]
+    private readonly Color[] droneColors = new Color[]
     {
-        new Color(0, 1, 1, 1),      // Cyan
-        new Color(1, 0, 1, 1),      // Magenta
-        new Color(1, 1, 0, 1),      // Yellow
-        new Color(0, 1, 0, 1),      // Green
-        new Color(1, 0.5f, 0, 1),   // Orange
-        new Color(0.5f, 0, 1, 1),   // Purple
-        new Color(1, 0, 0, 1),      // Red
-        new Color(0, 0.5f, 1, 1),   // Light Blue
+        new(0, 1, 1, 1),      // Cyan
+        new(1, 0, 1, 1),      // Magenta
+        new(1, 1, 0, 1),      // Yellow
+        new(0, 1, 0, 1),      // Green
+        new(1, 0.5f, 0, 1),   // Orange
+        new(0.5f, 0, 1, 1),   // Purple
+        new(1, 0, 0, 1),      // Red
+        new(0, 0.5f, 1, 1),   // Light Blue
     };
 
     [Header("World Mapping")]
-    [SerializeField] private bool autoSyncSearchArea = true;
+    [SerializeField] private readonly bool autoSyncSearchArea = true;
     [SerializeField] private Collider searchAreaCollider;
     [SerializeField] private Vector3 worldCenter = Vector3.zero;
     [SerializeField] private float worldSize = 200f;
-    [SerializeField][Range(0f, 0.5f)] private float boundaryPadding = 0.1f;
+    [SerializeField][Range(0f, 0.5f)] private readonly float boundaryPadding = 0.1f;
 
     [Header("Debug")]
-    [SerializeField] private bool showDebugInfo = true;
-    [SerializeField] private bool showDebugGizmos = false; 
+    [SerializeField] private readonly bool showDebugInfo = true;
+    [SerializeField] private readonly bool showDebugGizmos = false;
 
-   
+
     private Dictionary<Drone, DroneTrajectoryData> droneTrajectories;
     private Material lineMaterial;
     private float nextDrawTime;
@@ -62,7 +62,7 @@ public class SwarmTrajectoryDrawer : MonoBehaviour
     private float lastFrameTime = 0f;
     private float avgFrameTime = 0f;
 
-    private List<LineSegment> pendingLines = new List<LineSegment>();
+    private readonly List<LineSegment> pendingLines = new();
 
     private struct LineSegment
     {
@@ -177,7 +177,7 @@ public class SwarmTrajectoryDrawer : MonoBehaviour
             Drone drone = allDrones[i];
             Color color = droneColors[i % droneColors.Length];
 
-            DroneTrajectoryData data = new DroneTrajectoryData(drone, color);
+            DroneTrajectoryData data = new(drone, color);
             droneTrajectories[drone] = data;
         }
 
@@ -196,7 +196,7 @@ public class SwarmTrajectoryDrawer : MonoBehaviour
                 RenderTextureFormat.ARGB32
             );
             trajectoryTexture.filterMode = FilterMode.Bilinear;
-            trajectoryTexture.antiAliasing = 1;  
+            trajectoryTexture.antiAliasing = 1;
             trajectoryTexture.Create();
         }
 
@@ -306,7 +306,7 @@ public class SwarmTrajectoryDrawer : MonoBehaviour
             if (lineWidth > 1f)
             {
                 Vector2 dir = (end - start).normalized;
-                Vector2 perp = new Vector2(-dir.y, dir.x);
+                Vector2 perp = new(-dir.y, dir.x);
 
                 for (int i = 1; i <= lineWidth / 2; i++)
                 {

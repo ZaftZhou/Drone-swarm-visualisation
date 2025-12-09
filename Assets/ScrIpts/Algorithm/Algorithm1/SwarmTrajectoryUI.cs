@@ -13,11 +13,11 @@ public class SwarmTrajectoryUI : MonoBehaviour
     public Collider searchAreaCollider;
 
     [Header("UI Settings")]
-    public Vector2 mapSize = new Vector2(300, 300);
+    public Vector2 mapSize = new(300, 300);
     public bool autoSyncMapSize = true;
     [Range(0.1f, 2f)]
     public float mapDisplayScale = 1f;
-    public Vector2 mapPosition = new Vector2(20, 20);
+    public Vector2 mapPosition = new(20, 20);
     public float updateInterval = 0.2f;
 
     [Header("Text Settings")]
@@ -26,10 +26,10 @@ public class SwarmTrajectoryUI : MonoBehaviour
     public string clearButtonText = " lear";
 
     [Header("Color Settings")]
-    public Color panelBackgroundColor = new Color(0, 0, 0, 0.8f);
-    public Color buttonColor = new Color(0.8f, 0.2f, 0.2f, 0.8f);
+    public Color panelBackgroundColor = new(0, 0, 0, 0.8f);
+    public Color buttonColor = new(0.8f, 0.2f, 0.2f, 0.8f);
     public Color textColor = Color.white;
-    public Color borderColor = new Color(1, 1, 1, 0.5f);
+    public Color borderColor = new(1, 1, 1, 0.5f);
 
     private RawImage trajectoryMapImage;
     private TextMeshProUGUI statsTextTMP;
@@ -114,7 +114,7 @@ public class SwarmTrajectoryUI : MonoBehaviour
 #pragma warning restore CS0618 // Type or member is obsolete
         if (canvas == null)
         {
-            GameObject canvasObj = new GameObject("TrajectoryCanvas");
+            GameObject canvasObj = new("TrajectoryCanvas");
             canvas = canvasObj.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
 
@@ -144,7 +144,7 @@ public class SwarmTrajectoryUI : MonoBehaviour
 
     void CreateTrajectoryMap()
     {
-        GameObject mapObj = new GameObject("TrajectoryMap");
+        GameObject mapObj = new("TrajectoryMap");
         mapObj.transform.SetParent(uiPanel.transform, false);
 
         RectTransform mapRect = mapObj.AddComponent<RectTransform>();
@@ -157,7 +157,7 @@ public class SwarmTrajectoryUI : MonoBehaviour
         trajectoryMapImage = mapObj.AddComponent<RawImage>();
         trajectoryMapImage.texture = trajectoryDrawer.GetTrajectoryTexture();
 
-        GameObject border = new GameObject("Border");
+        GameObject border = new("Border");
         border.transform.SetParent(mapObj.transform, false);
         RectTransform borderRect = border.AddComponent<RectTransform>();
         borderRect.anchorMin = Vector2.zero;
@@ -171,7 +171,7 @@ public class SwarmTrajectoryUI : MonoBehaviour
 
     void CreateStatsText()
     {
-        GameObject textObj = new GameObject("StatsText");
+        GameObject textObj = new("StatsText");
         textObj.transform.SetParent(uiPanel.transform, false);
 
         RectTransform textRect = textObj.AddComponent<RectTransform>();
@@ -206,7 +206,7 @@ public class SwarmTrajectoryUI : MonoBehaviour
 
     void CreateClearButton()
     {
-        GameObject buttonObj = new GameObject("ClearButton");
+        GameObject buttonObj = new("ClearButton");
         buttonObj.transform.SetParent(uiPanel.transform, false);
 
         RectTransform buttonRect = buttonObj.AddComponent<RectTransform>();
@@ -223,7 +223,7 @@ public class SwarmTrajectoryUI : MonoBehaviour
         clearButton.onClick.AddListener(OnClearButtonClicked);
 
         // 按钮文本
-        GameObject textObj = new GameObject("Text");
+        GameObject textObj = new("Text");
         textObj.transform.SetParent(buttonObj.transform, false);
         RectTransform textRect = textObj.AddComponent<RectTransform>();
         textRect.anchorMin = Vector2.zero;

@@ -13,7 +13,7 @@ public abstract class AlgorithmBase : MonoBehaviour
 
     [Header("References")]
     [Tooltip("Drone List")]
-    [SerializeField] protected List<Drone> drones = new List<Drone>();
+    [SerializeField] protected List<Drone> drones = new();
 
     [Tooltip("Search Area Collider")]
     [SerializeField] protected Collider searchAreaCollider;

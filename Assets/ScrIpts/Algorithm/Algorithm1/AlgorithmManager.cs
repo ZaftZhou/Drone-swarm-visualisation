@@ -6,29 +6,29 @@ public class AlgorithmManager : MonoBehaviour
 {
     [Header("Drone Configuration")]
     [Tooltip("All drones")]
-    [SerializeField] private List<Drone> allDrones = new List<Drone>();
+    [SerializeField] private List<Drone> allDrones = new();
 
     [Tooltip("Auto-find drones in scene")]
-    [SerializeField] private bool autoFindDrones = true;
+    [SerializeField] private readonly bool autoFindDrones = true;
 
     [Header("Search Area")]
     [SerializeField] private Collider searchAreaCollider;
-    [SerializeField] private bool autoFindSearchArea = true;
+    [SerializeField] private readonly bool autoFindSearchArea = true;
 
     [Header("Available Algorithms")]
 
-    [SerializeField] private List<AlgorithmBase> availableAlgorithms = new List<AlgorithmBase>();
+    [SerializeField] private readonly List<AlgorithmBase> availableAlgorithms = new();
 
     [Header("Algorithm Control")]
     [Tooltip(" Current active algorithm index")]
     [SerializeField] private int currentAlgorithmIndex = 0;
 
     [Tooltip(" uto-initialize on start")]
-    [SerializeField] private bool autoInitializeOnStart = true;
+    [SerializeField] private readonly bool autoInitializeOnStart = true;
 
     [Header("Debug")]
     [Tooltip("Show debug info")]
-    [SerializeField] private bool showDebugInfo = true;
+    [SerializeField] private readonly bool showDebugInfo = true;
 
     private AlgorithmBase currentAlgorithm;
     public string CurrentAlgorithmName => currentAlgorithm != null ? currentAlgorithm.AlgorithmName : "None";
@@ -285,7 +285,7 @@ public class AlgorithmManager : MonoBehaviour
 
     public List<string> GetAlgorithmNames()
     {
-        List<string> names = new List<string>();
+        List<string> names = new();
         foreach (var algo in availableAlgorithms)
         {
             if (algo != null)

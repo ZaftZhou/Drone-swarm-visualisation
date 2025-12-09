@@ -37,7 +37,7 @@ public class PathSamplingDemo : MonoBehaviour
     // 私有变量
     private GameObject previewMarker;
     private float currentProgress = 0f;
-    private List<GameObject> pathMarkers = new List<GameObject>();
+    private readonly List<GameObject> pathMarkers = new();
 
     // 演示模式枚举
     public enum DemoMode
@@ -345,7 +345,7 @@ public class CollisionPredictor : MonoBehaviour
     {
         Debug.Log("🔍 开始检查潜在碰撞...");
 
-        List<float> collisionTimes = new List<float>();
+        List<float> collisionTimes = new();
 
         // 在多个时间点检查
         for (int i = 0; i <= checkPoints; i++)

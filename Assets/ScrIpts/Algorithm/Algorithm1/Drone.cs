@@ -13,47 +13,47 @@ using UnityEngine;
 public class Drone : MonoBehaviour
 {
     [Header("Movement Parameters")]
-    [SerializeField] private float maxSpeed = 15f;
-    [SerializeField] private float acceleration = 5f;
-    [SerializeField] private float rotationSpeed = 8f;
-    [SerializeField] private float targetReachedThreshold = 1.5f;
-    [SerializeField] private float minSpeedForRotation = 0.5f;
+    [SerializeField] private readonly float maxSpeed = 15f;
+    [SerializeField] private readonly float acceleration = 5f;
+    [SerializeField] private readonly float rotationSpeed = 8f;
+    [SerializeField] private readonly float targetReachedThreshold = 1.5f;
+    [SerializeField] private readonly float minSpeedForRotation = 0.5f;
 
     [Header("Flight Dynamics")]
     [Range(0f, 45f)]
-    [SerializeField] private float maxTiltAngle = 15f;
-    [SerializeField] private float tiltSpeed = 3f;
+    [SerializeField] private readonly float maxTiltAngle = 15f;
+    [SerializeField] private readonly float tiltSpeed = 3f;
     [Range(0f, 1f)]
-    [SerializeField] private float verticalDamping = 0.95f;
+    [SerializeField] private readonly float verticalDamping = 0.95f;
 
-    [SerializeField] private float altitudeControlStrength = 10f;
+    [SerializeField] private readonly float altitudeControlStrength = 10f;
 
     [Header("Collision Avoidance ")]
-    [SerializeField] private bool enableCollisionAvoidance = true;
-    [SerializeField] private float avoidanceDistance = 5f;
-    [SerializeField] private float avoidanceStrength = 3f;
+    [SerializeField] private readonly bool enableCollisionAvoidance = true;
+    [SerializeField] private readonly float avoidanceDistance = 5f;
+    [SerializeField] private readonly float avoidanceStrength = 3f;
     [SerializeField] private LayerMask avoidanceLayer;
 
     [Header("Sensing Parameters")]
     [SerializeField] private float sensorRadius = 10f;
-    [SerializeField] private SensorType sensorType = SensorType.Cone;
+    [SerializeField] private readonly SensorType sensorType = SensorType.Cone;
     [Range(15f, 120f)]
-    [SerializeField] private float coneAngle = 60f;
+    [SerializeField] private readonly float coneAngle = 60f;
     [SerializeField] private LayerMask droneLayer;
 
     [Header("Visualization 可视化")]
-    [SerializeField] private bool showSensorRange = true;
-    [SerializeField] private Color sensorColor = new Color(0, 1, 0, 0.3f);
-    [SerializeField] private bool showScannedArea = true;
-    [SerializeField] private Color scannedColor = new Color(0, 0.5f, 1f, 0.15f);
-    [SerializeField] private bool showDirectionArrow = true;
+    [SerializeField] private readonly bool showSensorRange = true;
+    [SerializeField] private Color sensorColor = new(0, 1, 0, 0.3f);
+    [SerializeField] private readonly bool showScannedArea = true;
+    [SerializeField] private Color scannedColor = new(0, 0.5f, 1f, 0.15f);
+    [SerializeField] private readonly bool showDirectionArrow = true;
 
     private Rigidbody rb;
     private Vector3 currentTarget;
     private bool isMovingToTarget = false;
     private Vector3 currentTilt = Vector3.zero;
     private float targetAltitude = 0f; 
-    private List<Vector3> scannedPositions = new List<Vector3>();
+    private readonly List<Vector3> scannedPositions = new();
     private float lastScanRecordTime = 0f;
     private const float scanRecordInterval = 0.5f;
 
@@ -116,7 +116,7 @@ public class Drone : MonoBehaviour
             return;
         }
 
-        Vector3 horizontalDirection = new Vector3(toTarget.x, 0, toTarget.z);
+        Vector3 horizontalDirection = new(toTarget.x, 0, toTarget.z);
         float horizontalDistance = horizontalDirection.magnitude;
 
         if (horizontalDistance < 0.01f)
@@ -128,7 +128,7 @@ public class Drone : MonoBehaviour
         float speedFactor = Mathf.Clamp01(horizontalDistance / 10f);
         float currentMaxSpeed = maxSpeed * Mathf.Max(speedFactor, 0.3f); 
         Vector3 desiredVelocity = horizontalDirection * currentMaxSpeed;
-        Vector3 currentHorizontalVelocity = new Vector3(Velocity.x, 0, Velocity.z);
+        Vector3 currentHorizontalVelocity = new(Velocity.x, 0, Velocity.z);
         Vector3 velocityChange = desiredVelocity - currentHorizontalVelocity;
         velocityChange = Vector3.ClampMagnitude(velocityChange, acceleration * Time.fixedDeltaTime);
 
@@ -205,7 +205,7 @@ public class Drone : MonoBehaviour
 
     private void ApplyRealisticTilt()
     {
-        Vector3 horizontalVel = new Vector3(Velocity.x, 0, Velocity.z);
+        Vector3 horizontalVel = new(Velocity.x, 0, Velocity.z);
 
         if (horizontalVel.sqrMagnitude < 0.1f)
         {
@@ -221,7 +221,7 @@ public class Drone : MonoBehaviour
 
             float targetPitch = localVel.z / maxSpeed * maxTiltAngle * 0.3f * speedRatio;
 
-            Vector3 targetTilt = new Vector3(targetPitch, 0, targetRoll);
+            Vector3 targetTilt = new(targetPitch, 0, targetRoll);
             currentTilt = Vector3.Lerp(currentTilt, targetTilt, tiltSpeed * Time.fixedDeltaTime);
         }
 
@@ -237,7 +237,7 @@ public class Drone : MonoBehaviour
     {
         Vector3 vel = rb.linearVelocity;
 
-        Vector3 horizontalVel = new Vector3(vel.x, 0, vel.z);
+        Vector3 horizontalVel = new(vel.x, 0, vel.z);
         if (horizontalVel.sqrMagnitude > maxSpeed * maxSpeed)
         {
             horizontalVel = horizontalVel.normalized * maxSpeed;
@@ -284,7 +284,7 @@ public class Drone : MonoBehaviour
 
     public List<Drone> GetNeighbors()
     {
-        List<Drone> neighbors = new List<Drone>();
+        List<Drone> neighbors = new();
         Collider[] hits = Physics.OverlapSphere(Position, sensorRadius, droneLayer);
 
         foreach (var hit in hits)
