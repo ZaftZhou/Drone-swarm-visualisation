@@ -23,8 +23,8 @@ public class GPUTrajectoryDrawer : MonoBehaviour
     [SerializeField] private bool continuousDrawing = true;
     
     [Header("Effects")]
-    [SerializeField] private bool useGlow = true;
-    [SerializeField] private float glowIntensity = 2f;
+    //[SerializeField] private bool useGlow = true;
+    //[SerializeField] private float glowIntensity = 2f;
     [SerializeField] private bool fadeTrail = false;
     [SerializeField] [Range(0.9f, 1f)] private float fadeAmount = 0.98f;
     

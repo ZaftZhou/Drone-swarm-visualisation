@@ -109,7 +109,9 @@ public class SwarmTrajectoryUI : MonoBehaviour
     void CreateUI()
     {
         // 创建或查找 Canvas
+#pragma warning disable CS0618 // Type or member is obsolete
         Canvas canvas = FindObjectOfType<Canvas>();
+#pragma warning restore CS0618 // Type or member is obsolete
         if (canvas == null)
         {
             GameObject canvasObj = new GameObject("TrajectoryCanvas");

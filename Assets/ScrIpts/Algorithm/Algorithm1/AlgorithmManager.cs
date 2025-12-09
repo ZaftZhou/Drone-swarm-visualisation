@@ -175,7 +175,9 @@ public class AlgorithmManager : MonoBehaviour
 
     private void FindAllDrones()
     {
+#pragma warning disable CS0618 // Type or member is obsolete
         Drone[] foundDrones = FindObjectsOfType<Drone>();
+#pragma warning restore CS0618 // Type or member is obsolete
         allDrones = foundDrones.ToList();
 
         if (showDebugInfo)
@@ -188,7 +190,9 @@ public class AlgorithmManager : MonoBehaviour
     private void FindSearchArea()
     {
 
+#pragma warning disable CS0618 // Type or member is obsolete
         Collider[] allColliders = FindObjectsOfType<Collider>();
+#pragma warning restore CS0618 // Type or member is obsolete
 
         foreach (var col in allColliders)
         {

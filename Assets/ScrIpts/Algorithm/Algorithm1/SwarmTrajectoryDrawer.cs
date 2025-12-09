@@ -22,7 +22,7 @@ public class SwarmTrajectoryDrawer : MonoBehaviour
       [SerializeField] private float lineWidth = 2f;  
 
     [Tooltip("lineSmoothing (0=Fastest, 2=Most smooth)")]
-    [SerializeField][Range(0, 2)] private int lineSmoothing = 0;
+    //[SerializeField][Range(0, 2)] private int lineSmoothing = 0;
 
     [Header("Color Settings")]
     [SerializeField]
@@ -160,7 +160,9 @@ public class SwarmTrajectoryDrawer : MonoBehaviour
 
     void FindAndSetupDrones()
     {
+#pragma warning disable CS0618 // Type or member is obsolete
         Drone[] allDrones = FindObjectsOfType<Drone>();
+#pragma warning restore CS0618 // Type or member is obsolete
 
         if (allDrones.Length == 0)
         {
