@@ -9,8 +9,7 @@ namespace Detection
         [Serializable]
         public enum CameraTarget
         {
-            Default = -2,
-            Target,
+            Default,
             Drone1,
             Drone2,
             Drone3,
@@ -26,11 +25,9 @@ namespace Detection
         [SerializeField]
         private float _minZ = -50;
         [SerializeField]
-        private float _zoomAmount = 10f;
+        private float _zoomAmount = 50f; //so fucking dumb
         [SerializeField]
         private float _panAmount = 10f;
-        [SerializeField]
-        private Transform _target;
         [SerializeField]
         DroneVisualiser _visualiser;
         private Transform _camera;
@@ -88,8 +85,8 @@ namespace Detection
 
         public void SetFocusTo(int target)
         {
+            if (target < 0 || target > (int)CameraTarget.Drone10) return;
             _currentTarget = target;
-            target -= 2;
             //Debug.Log((CameraTarget)target);
 
             if (target == (int)CameraTarget.Default)
@@ -97,10 +94,11 @@ namespace Detection
                 transform.position = _initialPivotPosition;
                 _camera.localPosition = _initialCameraLocalPosition;
                 _zoomAmount = 50f;
+                _panAmount = 10f;
             }
             else
             {
-                var targetTransform = ((CameraTarget)target == CameraTarget.Target ? _target : _visualiser.GetDrone(target));
+                var targetTransform = _visualiser.GetDrone(target - 1);
                 var cameraTrueAngle = 90 - Vector3.Angle(_camera.forward, Vector3.ProjectOnPlane(_camera.forward, Vector3.up));
                 transform.position = new(targetTransform.position.x, transform.position.y, targetTransform.position.z);
                 _camera.localPosition = new(_initialCameraLocalPosition.x, _initialCameraLocalPosition.y, -50f);

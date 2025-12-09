@@ -9,105 +9,75 @@ using Unity.Collections;
 using System.Linq;
 using System.Collections.Generic;
 
-
 namespace Detection
 {
-    [Serializable]
-    public enum VisLayer
-    {
-        Detection,
-        Drone,
-        Undetected,
-        Time,
-        Overlap
-    }
 
     public class DetectionTester : MonoBehaviour
     {
-
-
-        public struct DetectionEvent
-        {
-            public Vector3 DetectionVector;
-            public float Time;
-            public int DroneIndex;
-        }
-
-        public struct DetectionData
-        {
-            public DetectionEvent[] Events;
-            public Vector3 Position;
-            public Vector3 SummedDetectionVector;
-            public int EventCount;
-            public int TimesSeen;
-        }
-
-
-        public struct SimplePathSampler
-        {
-            public Vector3[] PathPositions;
-
-            public readonly Vector3 SampleAt(float t)
-            {
-                var atLeastIndex = Mathf.FloorToInt((PathPositions.Length - 1) * t);
-                var progressToNext = (PathPositions.Length - 1) * t % 1;
-                var nextIndex = progressToNext < 0.001 ? atLeastIndex : atLeastIndex + 1;
-                return Vector3.Lerp(PathPositions[atLeastIndex], PathPositions[nextIndex], progressToNext);
-            }
-        }
-
-        public Terrain Terrain;
-        public float DetectionAngle = 45f;
-        //public GameObject DetectionMeshBasePrefab;
-        public MeshFilter DetectionMeshFilter;
+        [Header("Simulation settings")]
+        public Vector3 DroneStart;
         public float MaxDetectionDistance = 500;
         public LayerMask DetectionLayer;
         public int DroneCount = 10;
-        public Color[] DroneColors = new Color[10];
-        public int DetectionThreshold = 1;
         public int DetectionRayCount = 500;
         public int DetectionSimulationSteps = 1000;
-        public Material DetectionVisMaterial;
-        public Material TargetDetectedMaterial;
-        public Material TargetUndetectedMaterial;
-        [Header("Increases memory use A LOT, adjust carefully")]
+        public float DetectionAngle = 45f;
+        [Tooltip("Increases memory use A LOT, adjust carefully!")]
         public int RecordedEventCount = 10;
+
+        [Header("Visualisation settings")]
+        public Color[] DroneColors = new Color[10];
+        public int DetectionThreshold = 1;
+
+        [Header("Scene References")]
         public GameObject DronePathSampler;
+        public Terrain Terrain;
+        public GameObject VisPlane;
+        public MeshFilter DetectionMeshFilter;
+        public DroneVisualiser DroneVisualiser;
+        public CameraController CameraController;
+        public List<Toggle> VisToggles;
+        public Toggle DrawTargetsToggle;
         public TMP_InputField DetectionAngleInput;
         public TMP_InputField MaxDetectionDistanceInput;
         public TMP_InputField DetectionThresholdInput;
         public TMP_InputField DetectionRayCountInput;
         public TMP_InputField DetectionSimulationStepsInput;
+        public TMP_Dropdown PatternSelection;
         public Slider TimeSlider;
-        public List<Toggle> VisToggles;
-        public Toggle DrawTargetsToggle;
-        public GameObject VisPlane;
-        public DroneVisualiser DroneVisualiser;
-        public CameraController CameraController;
-        public Vector3 DroneStart;
-        public RectTransform FindTimeIndicator;
+        public Button ExportButton;
+
+        [Header("Asset References")]
         public GameObject TargetPrefab;
-        public float FTIndicatorMinX;
+        public Material DetectionVisMaterial;
+        public Material TargetDetectedMaterial;
+        public Material TargetUndetectedMaterial;
+
+
+        [Header("Export settings")]
 
         private IDronePathSampler _dronePathSampler;
-        private DetectionData[] _vertexDetectionData;
-        private DetectionData[] _targetDetectionData;
         private float _detectionCircleRelativeHeight;
         private Vector3[] _detectionVerts;
-        private Texture2DArray _visTextureArray;
-        private Color32[][] _visPixels;
         private int[] _detectionTris;
-        private int _sideLength;
-        private int _layerAmount;
-        private bool _doneDetecting = false;
-        private Material _visMaterial;
-        private string _simulationId;
+        private DetectionData[] _vertexDetectionData;
+        private DetectionData[] _targetDetectionData;
         private Transform _targetParent;
         private readonly List<GameObject> _targets = new();
-
+        private int _sideLength;
+        private int _layerAmount;
+        private Texture2DArray _visTextureArray;
+        private Color32[][] _visPixels;
+        private Material _visMaterial;
+        private string _simulationId;
+        private bool _doneDetecting = false;
+        private SimulationRunSummaryData _simulationRunSummaryData;
+        private SimulationSettingData _simulationSettingData;
+        private DroneFlightData _droneFlightData;
+        private Vector3[,] _droneLocations;
         private void Awake()
         {
-            InitializeToggles();
+            InitializeUIElements();
 
             var mesh = DetectionMeshFilter.mesh;
 
@@ -194,8 +164,9 @@ namespace Detection
             DetectionRayCountInput.text = DetectionRayCount.ToString();
         }
 
-        private void InitializeToggles()
+        private void InitializeUIElements()
         {
+            PatternSelection.AddOptions(Enum.GetNames(typeof(PatternSelection)).ToList());
             for (int i = 0; i < VisToggles.Count; i++)
             {
                 if (VisToggles[i].TryGetComponent(out VisLayerToggle visLayerToggle))
@@ -220,7 +191,26 @@ namespace Detection
             DetectionSimulationSteps = int.Parse(DetectionSimulationStepsInput.text);
             DetectionAngle = float.Parse(DetectionAngleInput.text);
             _detectionCircleRelativeHeight = -0.5f / Mathf.Tan(DetectionAngle * Mathf.Deg2Rad);
+            var patternSelection = (PatternSelection)PatternSelection.value;
+            ((PartitionGridPathGenerator)_dronePathSampler).SetPatternSelection(patternSelection);
             _dronePathSampler.InitializePaths(DroneCount, DroneStart);
+            _simulationId = $"Simulation {DateTime.Now.DayOfYear}-{DateTime.Now.Hour}-{DateTime.Now.Minute}";
+            _simulationSettingData = new()
+            {
+                SimulationId = _simulationId,
+                DroneStart = DroneStart,
+                MaxDetectionDistance = MaxDetectionDistance,
+                DroneCount = DroneCount,
+                DetectionRayCount = DetectionRayCount,
+                DetectionSimulationSteps = DetectionSimulationSteps,
+                DetectionAngle = DetectionAngle,
+                TerrainWidth = Terrain.terrainData.size.x,
+                TerrainDepth = Terrain.terrainData.size.z,
+                TreeCount = Terrain.terrainData.treeInstanceCount,
+                TargetCount = _targets.Count,
+                TargetSize = _targets[0].GetComponent<Collider>().bounds.size,
+            };
+            ExportButton.interactable = false;
             Debug.Log("Detecting");
             _ = StartAsyncDetection();
         }
@@ -230,7 +220,7 @@ namespace Detection
             try
             {
                 ResetTerrainDetectionData();
-                ResetTargetDetectionData();
+                ResetTargets();
                 await Awaitable.NextFrameAsync();
                 await DetectionAsync(DetectionSimulationSteps, _dronePathSampler);
                 Debug.Log("Done detecting");
@@ -239,6 +229,7 @@ namespace Detection
                 await Awaitable.NextFrameAsync();
                 VisualiseDetectionData(TimeSlider.value);
                 Debug.Log("Done");
+                ExportButton.interactable = true;
             }
             catch (Exception ex)
             {
@@ -258,7 +249,7 @@ namespace Detection
             }
         }
 
-        private void ResetTargetDetectionData()
+        private void ResetTargets()
         {
             for (int i = 0; i < _targetDetectionData.Length; i++)
             {
@@ -267,19 +258,21 @@ namespace Detection
                 target.TimesSeen = 0;
                 target.SummedDetectionVector = new Vector3();
                 _targetDetectionData[i] = target;
+                _targets[i].GetComponent<MeshRenderer>().material = TargetUndetectedMaterial;
             }
         }
         private async Awaitable DetectionAsync(int steps, IDronePathSampler pathSampler)
         {
             await Awaitable.EndOfFrameAsync();
-            Vector3[,] droneLocations = new Vector3[DroneCount, steps];
+            _droneLocations = new Vector3[DroneCount, steps];
+            var minCommandsPerJob = DetectionRayCount < 32 ? DetectionRayCount : 32;
             Vector3[,,] randomDirections = new Vector3[DroneCount, steps, DetectionRayCount];
             for (int step = 0; step < steps; step++)
             {
                 float progress = step / (float)steps;
                 for (int droneIndex = 0; droneIndex < DroneCount; droneIndex++)
                 {
-                    droneLocations[droneIndex, step] = pathSampler.SamplePositionAt(progress, droneIndex);
+                    _droneLocations[droneIndex, step] = pathSampler.SamplePositionAt(progress, droneIndex);
                     for (int i = 0; i < DetectionRayCount; i++)
                     {
                         randomDirections[droneIndex, step, i] = new Vector3(OffsetRandom(), _detectionCircleRelativeHeight, OffsetRandom());
@@ -295,15 +288,15 @@ namespace Detection
                 droneResults[droneIndex] = new NativeArray<RaycastHit>(DetectionRayCount, Allocator.Persistent);
                 for (int step = 0; step < steps; step++)
                 {
-                    Vector3 droneLocation = droneLocations[droneIndex, step];
+                    Vector3 droneLocation = _droneLocations[droneIndex, step];
                     float progress = step / (float)steps;
                     for (int j = 0; j < DetectionRayCount; j++)
                     {
                         droneCommands[j] =
-                            new RaycastCommand(droneLocations[droneIndex, step], randomDirections[droneIndex, step, j], new QueryParameters() { layerMask = DetectionLayer }, MaxDetectionDistance);
+                            new RaycastCommand(_droneLocations[droneIndex, step], randomDirections[droneIndex, step, j], new QueryParameters() { layerMask = DetectionLayer }, MaxDetectionDistance);
                     }
 
-                    JobHandle handle = RaycastCommand.ScheduleBatch(droneCommands, droneResults[droneIndex], minCommandsPerJob: 32, maxHits: 1);
+                    JobHandle handle = RaycastCommand.ScheduleBatch(droneCommands, droneResults[droneIndex], minCommandsPerJob: minCommandsPerJob, maxHits: 1);
                     //await Awaitable.NextFrameAsync();
                     handle.Complete();
                     foreach (var hit in droneResults[droneIndex])
@@ -325,40 +318,47 @@ namespace Detection
             {
                 droneResult.Dispose();
             }
-            _simulationId = $"Simulation {DateTime.Now.DayOfYear}-{DateTime.Now.Hour}-{DateTime.Now.Minute}";
-            //if (_targetFound)
-            //{
-            //    FindTimeIndicator.gameObject.SetActive(true);
-            //    FindTimeIndicator.anchoredPosition = new Vector2(Mathf.Lerp(FTIndicatorMinX, 0, _targetFoundTime), FindTimeIndicator.anchoredPosition.y);
-            //}
+
             _doneDetecting = true;
-            // Debug.Log($"Target found: {_targetFound}");
+
         }
 
         private void HandeDetectionPlaneHit(int droneIndex, Vector3 droneLocation, float progress, RaycastHit hit)
         {
-            for (int vertexIndex = 0; vertexIndex < 3; vertexIndex++)
+            //https://discussions.unity.com/t/pinpointing-one-vertice-with-raycasthit/181509
+            var b = hit.barycentricCoordinate;
+            int index = hit.triangleIndex * 3;
+
+            if (b.x > b.y)
             {
-                var detectionVertex = _vertexDetectionData[_detectionTris[hit.triangleIndex * 3 + vertexIndex]];
-                if (detectionVertex.EventCount < detectionVertex.Events.Length)
-                {
-                    detectionVertex.Events[detectionVertex.EventCount].DetectionVector = droneLocation - detectionVertex.Position;
-                    detectionVertex.Events[detectionVertex.EventCount].Time = progress;
-                    detectionVertex.Events[detectionVertex.EventCount].DroneIndex = droneIndex;
-                    detectionVertex.EventCount++;
-                }
-                detectionVertex.SummedDetectionVector += (droneLocation - detectionVertex.Position).normalized
-                   * Mathf.Lerp(1f, 0.1f, (droneLocation - detectionVertex.Position).magnitude / MaxDetectionDistance);
-                detectionVertex.TimesSeen++;
-                _vertexDetectionData[_detectionTris[hit.triangleIndex * 3 + vertexIndex]] = detectionVertex;
+                if (!(b.x > b.z))
+                    index += 2; // z
             }
+            else if (b.y > b.z)
+                index += 1; // y
+            else
+                index += 2; // z
+
+            var detectionVertex = _vertexDetectionData[_detectionTris[index]];
+            if (detectionVertex.EventCount < detectionVertex.Events.Length)
+            {
+                detectionVertex.Events[detectionVertex.EventCount].DetectionVector = droneLocation - detectionVertex.Position;
+                detectionVertex.Events[detectionVertex.EventCount].Time = progress;
+                detectionVertex.Events[detectionVertex.EventCount].DroneIndex = droneIndex;
+                detectionVertex.EventCount++;
+            }
+            detectionVertex.SummedDetectionVector += (droneLocation - detectionVertex.Position).normalized
+                * Mathf.Lerp(1f, 0.1f, (droneLocation - detectionVertex.Position).magnitude / MaxDetectionDistance);
+            detectionVertex.TimesSeen++;
+            _vertexDetectionData[_detectionTris[index]] = detectionVertex;
+            
         }
 
         private void HandleTargetHit(int droneIndex, float progress, Vector3 droneLocation, DetectionTarget target)
         {
 
             var targetData = _targetDetectionData[target.index];
-            
+
             if (targetData.EventCount < targetData.Events.Length)
             {
                 targetData.Events[targetData.EventCount].DetectionVector = droneLocation - targetData.Position;
@@ -395,20 +395,22 @@ namespace Detection
 
         private void VisualiseDetectionData(float t)
         {
-            VisualiseDetectionLayers(t);
+            AnalyseSimulationData(t);
             VisualiseDrones(t);
-            VisualiseTargets(t);
             CameraController.Retarget();
         }
 
-        private void VisualiseDetectionLayers(float t)
+        private void AnalyseSimulationData(float t)
         {
+            DetectionThreshold = int.Parse(DetectionThresholdInput.text);
+
+            //Terrain detection analysis
+            int areaCovered = 0;
+            int totalOverlap = 0;
             int mostSeen = 0;
             int mostValidEvents = 0;
             float largestMagnitude = 0;
             Color[] visColors = new Color[_layerAmount];
-            DetectionThreshold = int.Parse(DetectionThresholdInput.text);
-
             foreach (var d in _vertexDetectionData)
             {
                 for (int i = d.EventCount - 1; i >= 0; i--)
@@ -424,7 +426,6 @@ namespace Detection
                 if (d.SummedDetectionVector.magnitude > largestMagnitude)
                     largestMagnitude = d.SummedDetectionVector.magnitude;
             }
-
             for (int i = 0; i < _vertexDetectionData.Length; i++)
             {
                 ClearColors(visColors);
@@ -446,6 +447,7 @@ namespace Detection
 
                 if (validEvents >= DetectionThreshold)
                 {
+                    areaCovered++;
                     var n = summedPartialDetectionVector.normalized;
                     var dimmingFactor = ((validEvents / (float)mostValidEvents) + (data.SummedDetectionVector.magnitude / largestMagnitude)) / 2;
                     var lastSeen = data.Events[data.EventCount - 1].Time;
@@ -456,6 +458,7 @@ namespace Detection
                         seenBy += droneSeens[droneIndex] > 0 ? 1 : 0;
                     }
                     bool hasOverlap = seenBy > 1;
+                    totalOverlap += hasOverlap ? seenBy : 0;
                     float overlapAmount = hasOverlap ? ((float)seenBy / DroneCount) : 0;
                     visColors[(int)VisLayer.Detection] = new Color(n.x, n.y, n.z) * new Color(dimmingFactor, dimmingFactor, dimmingFactor);
                     visColors[(int)VisLayer.Drone] = DroneColors[mostSeenByDroneIndex];
@@ -472,7 +475,7 @@ namespace Detection
                     _visPixels[layer][pixelIndex] = visColors[layer];
                 }
             }
-
+            //Terrain detection visualisation
             for (int i = 0; i < VisToggles.Count; i++)
             {
                 var layer = VisToggles[i].GetComponent<VisLayerToggle>().VisLayer;
@@ -481,6 +484,77 @@ namespace Detection
             }
             _visTextureArray.Apply();
             _visMaterial.SetTexture("_VisTextures", _visTextureArray);
+
+            int targetsFound = 0;
+            //Target detection analysis & visualisation
+            for (int i = 0; i < _targetDetectionData.Length; i++)
+            {
+                var data = _targetDetectionData[i];
+                Vector3 summedPartialDetectionVector = new();
+                int validEvents = data.EventCount;
+                for (int eventIndex = 0; eventIndex < data.EventCount; eventIndex++)
+                {
+                    var recordedEvent = data.Events[eventIndex];
+                    if (recordedEvent.Time > t)
+                    {
+                        validEvents = eventIndex;
+                        break;
+                    }
+                    summedPartialDetectionVector += data.Events[eventIndex].DetectionVector;
+                }
+                if (validEvents >= DetectionThreshold)
+                {
+                    _targets[i].GetComponent<MeshRenderer>().material = TargetDetectedMaterial;
+                    targetsFound++;
+                }
+            }
+
+            _simulationRunSummaryData = CreateRunSummary(t, areaCovered, totalOverlap, targetsFound);
+            _droneFlightData = CreateDroneFlightData();
+        }
+
+        private DroneFlightData CreateDroneFlightData()
+        {
+            var droneDistances = _dronePathSampler.GetTotalDistances();
+            var droneLocations = new Vector3[DroneCount][];
+            for (int droneIndex = 0; droneIndex < DroneCount; droneIndex++)
+            {
+                droneLocations[droneIndex] = new Vector3[DetectionSimulationSteps];
+                for (int step = 0; step < DetectionSimulationSteps; step++)
+                {
+                    droneLocations[droneIndex][step] = _droneLocations[droneIndex, step];
+                }
+            }
+            return new ()
+            {
+                DroneTotalFlightDistances = droneDistances,
+                //Do I hate this? Yes
+                Drone1FlightPath = droneLocations[0],
+                Drone2FlightPath = droneLocations[1],
+                Drone3FlightPath = droneLocations[2],
+                Drone4FlightPath = droneLocations[3],
+                Drone5FlightPath = droneLocations[4],
+                Drone6FlightPath = droneLocations[5],
+                Drone7FlightPath = droneLocations[6],
+                Drone8FlightPath = droneLocations[7],
+                Drone9FlightPath = droneLocations[8],
+                Drone10FlightPath = droneLocations[9],
+            };
+        }
+
+        private SimulationRunSummaryData CreateRunSummary(float t, int areaCovered, int totalOverlap, int targetsFound)
+        {
+
+
+            return new()
+            {
+                SimulationId = _simulationId,
+                Time = t,
+                DetectionThreshold = DetectionThreshold,
+                TargetsFound = targetsFound,
+                AreaCovered = areaCovered,
+                OverlapAmount = totalOverlap,
+            };
         }
 
         private void VisualiseDrones(float t)
@@ -493,72 +567,6 @@ namespace Detection
                 distances[i] = (dronePositions[i] - new Vector3(dronePositions[i].x, Terrain.SampleHeight(dronePositions[i]), dronePositions[i].z)).magnitude; // this is so stupid but my brain is fried
             }
             DroneVisualiser.Visualise(dronePositions, DetectionAngle, distances);
-        }
-
-        private void VisualiseTargets(float t)
-        {
-            int mostSeen = 0;
-            int mostValidEvents = 0;
-            float largestMagnitude = 0;
-            DetectionThreshold = int.Parse(DetectionThresholdInput.text);
-
-            foreach (var target in _targetDetectionData)
-            {
-                for (int i = target.EventCount - 1; i >= 0; i--)
-                {
-                    if (target.Events[i].Time <= t && i > mostValidEvents)
-                    {
-                        mostValidEvents = i + 1;
-                        break;
-                    }
-                }
-                if (target.TimesSeen > mostSeen)
-                    mostSeen = target.TimesSeen;
-                if (target.SummedDetectionVector.magnitude > largestMagnitude)
-                    largestMagnitude = target.SummedDetectionVector.magnitude;
-            }
-
-            for (int i = 0; i < _targetDetectionData.Length; i++)
-            {
-                var data = _targetDetectionData[i];
-
-                Vector3 summedPartialDetectionVector = new();
-                int validEvents = data.EventCount;
-                //int[] droneSeens = new int[DroneCount];
-                for (int eventIndex = 0; eventIndex < data.EventCount; eventIndex++)
-                {
-                    var recordedEvent = data.Events[eventIndex];
-                    if (recordedEvent.Time > t)
-                    {
-                        validEvents = eventIndex;
-                        break;
-                    }
-                    summedPartialDetectionVector += data.Events[eventIndex].DetectionVector;
-                    //droneSeens[data.Events[eventIndex].DroneIndex]++;
-                }
-
-                if (validEvents >= DetectionThreshold)
-                {
-                    _targets[i].GetComponent<MeshRenderer>().material = TargetDetectedMaterial;
-                    //var n = summedPartialDetectionVector.normalized;
-                    //var dimmingFactor = ((validEvents / (float)mostValidEvents) + (data.SummedDetectionVector.magnitude / largestMagnitude)) / 2;
-                    //var lastSeen = data.Events[data.EventCount - 1].Time;
-                    //int mostSeenByDroneIndex = CalculateMostSeenByDroneIndex(droneSeens);
-                    //int seenBy = 0;
-                }
-                else
-                {
-                    _targets[i].GetComponent<MeshRenderer>().material = TargetUndetectedMaterial;
-                }
-            }
-        }
-
-        private void OnApplicationQuit()
-        {
-            DetectionMeshFilter.GetComponent<MeshCollider>().sharedMesh = null;
-            Destroy(DetectionMeshFilter);
-            _vertexDetectionData = null;
-            Resources.UnloadUnusedAssets();
         }
 
         private void SetLayerVisibility(VisLayer layer, bool on)
@@ -577,15 +585,26 @@ namespace Detection
         {
             _targetParent.gameObject.SetActive(value);
         }
+        public void ExportEverything()
+        {
+            var simulationFolderPath = Path.Combine(Application.persistentDataPath, _simulationId);
+            Debug.Log($"Exporting data to {simulationFolderPath}");
+            Directory.CreateDirectory(simulationFolderPath);
+            ExportImages(false, simulationFolderPath);
+            ExportJsons(simulationFolderPath);
+        }
 
-        public void ExportImages(bool exportOnlyVisible)
+        private void ExportJsons(string simulationFolderPath)
+        {
+            File.WriteAllText(Path.Combine(simulationFolderPath, $"SimulationSettingData.json"), JsonUtility.ToJson(_simulationSettingData, true));
+            File.WriteAllText(Path.Combine(simulationFolderPath, $"SimulationRunSummaryData.json"), JsonUtility.ToJson(_simulationRunSummaryData, true));
+            File.WriteAllText(Path.Combine(simulationFolderPath, $"DroneFlightData.json"), JsonUtility.ToJson(_droneFlightData, true));
+        }
+
+        public void ExportImages(bool exportOnlyVisible, string folderPath)
         {
             if (!_doneDetecting) { return; }
             Texture2D outputTexture = new(_sideLength, _sideLength);
-            var simulationFolderPath = Path.Combine(Application.persistentDataPath, _simulationId);
-            Directory.CreateDirectory(simulationFolderPath);
-            Debug.Log($"baking data to {simulationFolderPath}");
-
             for (int i = 0; i < VisToggles.Count; i++)
             {
                 if (!exportOnlyVisible || VisToggles[i].isOn)
@@ -593,23 +612,10 @@ namespace Detection
                     outputTexture.SetPixels32(_visTextureArray.GetPixels32(i));
                     outputTexture.Apply();
                     var png = outputTexture.EncodeToPNG();
-                    var path = Path.Combine(simulationFolderPath, $"{(VisLayer)i} T-{TimeSlider.value}.png");
-                    File.WriteAllBytes(path, png);
+                    var filePath = Path.Combine(folderPath, $"{(VisLayer)i} T-{TimeSlider.value}.png");
+                    File.WriteAllBytes(filePath, png);
                 }
             }
-            string j = "";
-            for (int targetIndex = 0; targetIndex < _targetDetectionData.Length; targetIndex++)
-            {
-                j += $"{JsonUtility.ToJson(_targetDetectionData[targetIndex])}\n";
-                for (int eventIndex = 0; eventIndex < _targetDetectionData[targetIndex].Events.Length; eventIndex++)
-                {
-                    j += $"\t{JsonUtility.ToJson(_targetDetectionData[targetIndex].Events[eventIndex])}\n";
-                }
-                j += "\n";
-            }
-
-            var jpath = Path.Combine(simulationFolderPath, $"lmao.json");
-            File.WriteAllText(jpath, j);
         }
 
         public void VisualiseFindingMoment()
